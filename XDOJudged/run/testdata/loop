@@ -1,0 +1,9 @@
+#!/bin/sh
+
+True() {
+	return 0
+}
+
+while True; do
+	True;
+done
