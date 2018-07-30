@@ -7,6 +7,8 @@ import (
 	"os"
 	"runtime"
 	"unsafe"
+
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/siginfo"
 )
 
 const (
@@ -15,7 +17,7 @@ const (
 )
 
 func blockUntilWaitable(p *os.Process) (stopped bool, err error) {
-	var si siginfo
+	var si siginfo.Siginfo
 	_, _, errno := unix.Syscall6(unix.SYS_WAITID, _P_PID, uintptr(p.Pid),
 		uintptr(unsafe.Pointer(&si)),
 		unix.WEXITED|unix.WSTOPPED|unix.WNOWAIT, 0, 0)
@@ -23,5 +25,5 @@ func blockUntilWaitable(p *os.Process) (stopped bool, err error) {
 	if errno != 0 {
 		return false, errno
 	}
-	return si.getCode() == _CLD_STOPPED, nil
+	return si.Code == _CLD_STOPPED, nil
 }
