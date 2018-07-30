@@ -3,6 +3,7 @@ package run
 import (
 	"bytes"
 	"fmt"
+	"golang.org/x/sys/unix"
 	"io"
 	"os"
 	"time"
@@ -11,6 +12,7 @@ import (
 )
 
 var zeroAttr Attr
+var zeroRlimit unix.Rlimit
 
 func (c *Cmd) start() (err error) {
 	attr := c.Attr
@@ -93,6 +95,12 @@ func (c *Cmd) start() (err error) {
 		c.wallTimer = time.AfterFunc(*c.Attr.WallTimeLimit, func() {
 			c.kill()
 		})
+	}
+
+	// Do not dump core
+	err = prlimit(c.Process.Pid, unix.RLIMIT_CORE, &zeroRlimit, nil)
+	if err != nil {
+		return err
 	}
 
 	// Grant the child to continue
