@@ -4,20 +4,20 @@ package run
 import (
 	"flag"
 	"fmt"
-	"io"
 	"golang.org/x/sys/unix"
+	"io"
 	"os"
 	"runtime"
 
-	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
 	"github.com/syndtr/gocapability/capability"
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
 )
 
 // This command line (os.Args[0]) is internal used by the package.
 // Don't clash.
 const ChildName = "[xdoj child]"
 
-var syncFlag = []byte{0x19, 0x26, 0x08, 0x17};
+var syncFlag = []byte{0x19, 0x26, 0x08, 0x17}
 
 func bailOut(w io.Writer, msg string, err error) {
 	pid := os.Getpid()

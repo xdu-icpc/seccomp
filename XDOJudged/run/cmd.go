@@ -11,13 +11,13 @@ import (
 //
 // A Cmd cannot be reused after calling its Start, Run, Output or
 // CombinedOutput methods.
-type Cmd struct{
+type Cmd struct {
 	*exec.Cmd
 	Attr *Attr
 
-	cpuTimer *posixtime.Timer
+	cpuTimer  *posixtime.Timer
 	wallTimer *time.Timer
-	finished bool
+	finished  bool
 }
 
 // Run starts the specified command and waits for it to complete.

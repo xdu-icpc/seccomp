@@ -23,13 +23,13 @@ func compareRE(expect *run.RuntimeError, get *run.RuntimeError) error {
 }
 
 func TestRuntimeError(t *testing.T) {
-	type test struct{
-		name string
+	type test struct {
+		name    string
 		command string
-		args []string
-		attr *run.Attr
+		args    []string
+		attr    *run.Attr
 		sysattr *syscall.SysProcAttr
-		re *run.RuntimeError
+		re      *run.RuntimeError
 	}
 
 	tl := time.Millisecond * 200
@@ -40,57 +40,57 @@ func TestRuntimeError(t *testing.T) {
 	tests := []test{
 		{name: "TestHelloWorld", command: "testdata/hw"},
 		{
-			name: "TestTLE",
+			name:    "TestTLE",
 			command: "testdata/loop",
 			attr: &run.Attr{
 				CPUTimeLimit: &tl,
 			},
 			re: &run.RuntimeError{
 				Reason: run.ReasonCPUTimeLimit,
-				Code: -int(unix.SIGKILL),
+				Code:   -int(unix.SIGKILL),
 			},
 		},
 		{
-			name: "TestILE",
+			name:    "TestILE",
 			command: "testdata/loop",
 			attr: &run.Attr{
 				WallTimeLimit: &tl,
 			},
 			re: &run.RuntimeError{
 				Reason: run.ReasonWallTimeLimit,
-				Code: -int(unix.SIGKILL),
+				Code:   -int(unix.SIGKILL),
 			},
 		},
 		{
-			name: "TestNoCapability",
+			name:    "TestNoCapability",
 			command: "testdata/chroot",
 			sysattr: &syscall.SysProcAttr{
-				Chroot: "/",
-				Cloneflags: syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER,
+				Chroot:      "/",
+				Cloneflags:  syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER,
 				UidMappings: idMap,
 				GidMappings: idMap,
 			},
 			re: &run.RuntimeError{
 				Reason: run.ReasonUnknown,
-				Code: 125,
+				Code:   125,
 			},
 		},
-		{name: "TestFork", command: "testdata/fork",},
+		{name: "TestFork", command: "testdata/fork"},
 		{
-			name: "TestNoFork",
+			name:    "TestNoFork",
 			command: "testdata/fork",
 			attr: &run.Attr{
 				CPUTimeLimit: &tl,
 			},
 			re: &run.RuntimeError{
 				Reason: run.ReasonUnknown,
-				Code: -int(unix.SIGSYS),
+				Code:   -int(unix.SIGSYS),
 			},
 		},
 	}
 
 	for _, i := range tests {
-		t.Run(i.name, func(t *testing.T){
+		t.Run(i.name, func(t *testing.T) {
 			cmd := run.Command(i.command, i.args...)
 			cmd.Attr = i.attr
 			cmd.SysProcAttr = i.sysattr

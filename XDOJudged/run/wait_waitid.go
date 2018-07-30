@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	_P_PID = 1
+	_P_PID       = 1
 	_CLD_STOPPED = 5
 )
 

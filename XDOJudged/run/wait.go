@@ -38,7 +38,7 @@ func (c *Cmd) wait() (*Usage, *RuntimeError, error) {
 	_ = c.Cmd.Wait()
 
 	usage := Usage{
-		CPUTime: c.ProcessState.SystemTime() + c.ProcessState.UserTime(),
+		CPUTime:      c.ProcessState.SystemTime() + c.ProcessState.UserTime(),
 		MemoryInByte: 0, // FIXME: not implemented yet.
 	}
 

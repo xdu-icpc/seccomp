@@ -52,7 +52,7 @@ func (c *Cmd) start() (err error) {
 	if err != nil {
 		return err
 	}
-	defer func(){
+	defer func() {
 		if err != nil {
 			c.kill()
 			c.wait()
@@ -81,7 +81,7 @@ func (c *Cmd) start() (err error) {
 
 	if attr.CPUTimeLimit != nil {
 		c.cpuTimer, err = clock.AfterFunc(*c.Attr.CPUTimeLimit,
-			func(ev posixtime.TimerEvent){
+			func(ev posixtime.TimerEvent) {
 				c.kill()
 			})
 		if err != nil {
@@ -90,7 +90,7 @@ func (c *Cmd) start() (err error) {
 	}
 
 	if attr.WallTimeLimit != nil {
-		c.wallTimer = time.AfterFunc(*c.Attr.WallTimeLimit, func(){
+		c.wallTimer = time.AfterFunc(*c.Attr.WallTimeLimit, func() {
 			c.kill()
 		})
 	}
