@@ -15,6 +15,9 @@ var cntChan = int32(LIMIT_TIMER)
 // This channel contains usable position of arrayChan.
 var chanPos = make(chan int, LIMIT_TIMER)
 
+// Atomics to mitigate ESRCH issue (#14).
+var esrchFlag = [LIMIT_TIMER]int32{}
+
 func init() {
 	for i := 0; i < LIMIT_TIMER; i++ {
 		chanPos <- i
@@ -31,6 +34,7 @@ func newChanId() (int, bool) {
 	pos := <-chanPos
 	lockUselessLock()
 	arrayChan[pos] = make(chan struct{})
+	esrchFlag[pos] = 0
 	unlockUselessLock()
 	return pos, true
 }

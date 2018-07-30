@@ -21,18 +21,38 @@
 package posixtime
 
 import (
+	"golang.org/x/sys/unix"
+	"os"
+	"syscall"
 	"unsafe"
 
-	"golang.org/x/sys/unix"
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/siginfo"
 )
 
 // In Linux, sigwaitinfo is just a special case of rt_sigtimedwait,
 // with sigsetsize = sizeof(sigset_t) and timeout = NULL. To reduce GC we
 // do not return siginfo, but accept a pointer as parameter.
-func sigwaitinfo(set *sigset, info *siginfo) error {
+func sigwaitinfo(set *sigset, info *siginfo.Siginfo) error {
 	_, _, errno := unix.Syscall6(unix.SYS_RT_SIGTIMEDWAIT,
 		uintptr(unsafe.Pointer(set)), uintptr(unsafe.Pointer(info)),
 		uintptr(0), uintptr(8), uintptr(0), uintptr(0))
+
+	if errno != 0 {
+		return errno
+	}
+
+	return nil
+}
+
+func sigqueue(pid int, sig syscall.Signal, value uintptr) error {
+	si := &siginfo.SiginfoQueue{}
+	si.Signo = int32(sig)
+	si.Code = int32(siginfo.SI_QUEUE)
+	si.Pid = int32(os.Getpid())
+	si.Uid = uint32(os.Getuid())
+	si.Value = value
+	_, _, errno := unix.Syscall(uintptr(pid), uintptr(sig),
+		uintptr(unsafe.Pointer(si)), 0)
 
 	if errno != 0 {
 		return errno

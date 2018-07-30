@@ -19,11 +19,14 @@
 package posixtime
 
 import (
+	"sync/atomic"
 	"syscall"
+
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/siginfo"
 )
 
 func demux() {
-	var info siginfo
+	var info siginfo.Siginfo
 
 	mask := sigsetRTMIN()
 	for {
@@ -37,7 +40,25 @@ func demux() {
 			panic(err)
 		}
 
-		ch := getChanById(int(info.getValue()))
+		id, queued := -1, false
+		if p := info.ToSiginfoTimer(); p != nil {
+			id = int(p.Value)
+		} else if p := info.ToSiginfoQueue(); p != nil {
+			id = int(p.Value)
+			queued = true
+		}
+		if id == -1 {
+			continue
+		}
+
+		ch := getChanById(id)
+		esrch := atomic.SwapInt32(&esrchFlag[id], 1)
+		if esrch == 1 && !queued {
+			// The process has been reaped and timerRoutine deliberately
+			// queued a signal.  Ignore other signals before it.
+			continue
+		}
+
 		close(ch)
 	}
 }

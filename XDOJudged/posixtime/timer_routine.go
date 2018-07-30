@@ -19,6 +19,8 @@
 package posixtime
 
 import (
+	"os"
+	"sync/atomic"
 	"syscall"
 
 	"golang.org/x/sys/unix"
@@ -73,10 +75,19 @@ func timerRoutine(c ClockID, ts unix.Timespec, chstop chan struct{},
 			// stop the timer by setting a zero itimerspec.
 			its, err := timerSetTime(t, 0, &zeroits)
 			if err != nil {
-				panic(err)
+				if err == unix.ESRCH {
+					// The process bound to the timer has been reaped.
+					old := atomic.SwapInt32(&esrchFlag[chexpireId], 1)
+					if old == 0 {
+						sigqueue(os.Getpid(), SIGRTMIN,
+							uintptr(chexpireId))
+					}
+				} else {
+					panic(err)
+				}
 			}
 
-			if *its == zeroits {
+			if its == nil || *its == zeroits {
 				// This means the timer has already expired.
 				// There is a potential race conditon: the expiration
 				// signal is still in queue and chexpire is NOT closed

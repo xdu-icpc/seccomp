@@ -22,6 +22,8 @@ package posixtime_test
 
 import (
 	"math/rand"
+	"os"
+	"os/exec"
 	"runtime"
 	"testing"
 	"time"
@@ -150,5 +152,55 @@ func TestIssue4(t *testing.T) {
 	t.Logf("we have %d goroutines.", x)
 	if x > 10 {
 		t.Fatalf("goroutines leaked.")
+	}
+}
+
+func TestHelperProcess(*testing.T) {
+	if os.Getenv("GO_POSIXTIME_HELPER_PROCESS") != "1" {
+		return
+	}
+
+	// block forever
+	ch := make(chan struct{})
+	<-ch
+}
+
+func TestIssue14(t *testing.T) {
+	cmd := exec.Command(os.Args[0], "-test.run=TestHelperProcess")
+	cmd.Env = []string{"GO_POSIXTIME_HELPER_PROCESS=1"}
+	err := cmd.Start()
+	if err != nil {
+		t.Fatalf("can not start helper process: %v", err)
+	}
+
+	defer cmd.Wait()
+	defer cmd.Process.Kill()
+
+	clk, err := posixtime.GetCPUClockID(cmd.Process.Pid)
+	if err != nil {
+		t.Fatalf("GetCPUClockID: %v", err)
+	}
+
+	tm, err := clk.NewTimer(time.Second)
+	if err != nil {
+		t.Fatalf("NewTimer: %v", err)
+	}
+
+	// Kill and reap the process.
+	err = cmd.Process.Kill()
+	if err != nil {
+		t.Fatalf("Kill: %v", err)
+	}
+
+	err = cmd.Wait()
+	_, ok := err.(*exec.ExitError)
+	if !ok {
+		t.Fatalf("Wait: %v", err)
+	}
+
+	// Try to stop the timer on the reaped process
+	armed := tm.Stop()
+	if !armed {
+		t.Fatalf("Stop: wrong return value")
 	}
 }

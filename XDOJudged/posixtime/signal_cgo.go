@@ -26,8 +26,6 @@ package posixtime
 int _SIGRTMIN;
 static void init_sigrtmin(void) __attribute__((constructor));
 
-const int offset_of_si_value = __builtin_offsetof(siginfo_t, si_value);
-
 static void init_sigrtmin(void)
 {
 	_SIGRTMIN = SIGRTMIN;
@@ -47,29 +45,17 @@ const _SIGEV_THREAD = C.SIGEV_THREAD
 
 var _SIGRTMIN = C._SIGRTMIN
 
-type sigset C.sigset_t
-type siginfo C.siginfo_t
-type sigevent C.struct_sigevent
-
 // This signal is used by the package.  Do not handle it with os/signal.
-// This is implemented as a function instead if a const, because in NPTL
-// environments SIGRTMIN is not a real compile-time constant.
-func SIGRTMIN() syscall.Signal {
-	return syscall.Signal(_SIGRTMIN)
-}
+var SIGRTMIN = syscall.Signal(_SIGRTMIN)
+
+type sigset C.sigset_t
+type sigevent C.struct_sigevent
 
 func sigsetRTMIN() sigset {
 	var ret sigset
 	C.sigemptyset((*C.sigset_t)(unsafe.Pointer(&ret)))
 	C.sigaddset((*C.sigset_t)(unsafe.Pointer(&ret)), _SIGRTMIN)
 	return ret
-}
-
-func (i *siginfo) getValue() uintptr {
-	// Some platform has si_value in anonymous union, so we have to use
-	// a dirty expression.
-	return *(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(i)) +
-		uintptr(C.offset_of_si_value)))
 }
 
 func (e *sigevent) setValue(v uintptr) {
