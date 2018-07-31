@@ -169,15 +169,3 @@ func RetTrace(msg uint16) bpf.Instruction {
 func RetLog() bpf.Instruction {
 	return bpf.RetConstant{Val: SECCOMP_RET_LOG}
 }
-
-// A seccomp prohibits process creating, including fork(2), vfork(2)
-// and clone(2) without CLONE_THREAD flag.
-var NoForkFilter []bpf.RawInstruction
-
-func init() {
-	var err error
-	NoForkFilter, err = bpf.Assemble(noForkRule)
-	if err != nil {
-		panic(err)
-	}
-}

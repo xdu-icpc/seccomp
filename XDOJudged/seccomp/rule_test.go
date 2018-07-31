@@ -20,6 +20,7 @@ package seccomp_test
 
 import (
 	"bytes"
+	"golang.org/x/net/bpf"
 	"log"
 	"os"
 	"os/exec"
@@ -35,7 +36,11 @@ func init() {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		err := seccomp.SeccompFilter(0, seccomp.NoForkFilter)
+		ft, err := bpf.Assemble(noForkRule)
+		if err != nil {
+			log.Fatalf("bpf.Assemble: %v", err)
+		}
+		err = seccomp.SeccompFilter(0, ft)
 		if err != nil {
 			log.Fatalf("seccomp: %v", err)
 		}

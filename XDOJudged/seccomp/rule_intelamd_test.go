@@ -18,11 +18,13 @@
 
 // +build amd64 386
 
-package seccomp
+package seccomp_test
 
 import (
 	. "golang.org/x/net/bpf"
 	"golang.org/x/sys/unix"
+
+	. "linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
 )
 
 const x32SyscallBit = uint32(0x40000000)
