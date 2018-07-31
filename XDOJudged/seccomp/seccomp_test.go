@@ -39,10 +39,8 @@ func TestSeccompFilter(t *testing.T) {
 			SkipTrue:  0,
 			SkipFalse: 1,
 		},
-		bpf.RetConstant{
-			Val: seccomp.SECCOMP_RET_ERRNO | uint32(unix.ENOSYS),
-		},
-		seccomp.RetOK,
+		seccomp.RetErrno(uint16(unix.ENOSYS)),
+		seccomp.RetAllow(),
 	}
 	filter, err := bpf.Assemble(rule)
 	if err != nil {

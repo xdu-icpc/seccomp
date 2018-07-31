@@ -82,7 +82,7 @@ var noForkRule = []Instruction{
 		SkipTrue:  0,
 		SkipFalse: 1},
 	// 13, return OK
-	RetOK,
-	// 14, return ENOSYS
-	RetDisallow,
+	RetAllow(),
+	// 14, signal the process
+	RetTrap(0),
 }

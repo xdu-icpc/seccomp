@@ -130,11 +130,45 @@ func LoadReg(n uint32, h Half) bpf.Instruction {
 	return bpf.LoadAbsolute{Off: 8 + n*8 + uint32(h), Size: 4}
 }
 
-// Seccomp actions.
-var (
-	RetOK       = bpf.RetConstant{Val: SECCOMP_RET_ALLOW}
-	RetDisallow = bpf.RetConstant{Val: SECCOMP_RET_KILL}
-)
+// Generate an instruction to allow the system call.
+func RetAllow() bpf.Instruction {
+	return bpf.RetConstant{Val: SECCOMP_RET_ALLOW}
+}
+
+// Generate an instruction to kill the process.
+func RetKillProcess() bpf.Instruction {
+	return bpf.RetConstant{Val: SECCOMP_RET_KILL_PROCESS}
+}
+
+// Generate an instruction to kill the thread.
+func RetKillThread() bpf.Instruction {
+	return bpf.RetConstant{Val: SECCOMP_RET_KILL_THREAD}
+}
+
+// Generate an instruction to send a catchable SIGSYS signal to the process,
+// and set the si_errno field of the siginfo_t structure to errno.
+func RetTrap(errno uint16) bpf.Instruction {
+	return bpf.RetConstant{Val: SECCOMP_RET_TRAP | uint32(errno)}
+}
+
+// Generate an instruction to return an errno for the system call, without
+// executing it.
+func RetErrno(errno uint16) bpf.Instruction {
+	return bpf.RetConstant{Val: SECCOMP_RET_ERRNO | uint32(errno)}
+}
+
+// Generate an instruction to notify a ptrace-based tracer prior to
+// executing the system call.  The tracer can use PTRACE_GETEVENTMSG
+// to get the msg value.
+func RetTrace(msg uint16) bpf.Instruction {
+	return bpf.RetConstant{Val: SECCOMP_RET_TRACE | uint32(msg)}
+}
+
+// Allow the system call being executed after the filter return action
+// is logged.
+func RetLog() bpf.Instruction {
+	return bpf.RetConstant{Val: SECCOMP_RET_LOG}
+}
 
 // A seccomp prohibits process creating, including fork(2), vfork(2)
 // and clone(2) without CLONE_THREAD flag.
