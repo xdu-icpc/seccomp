@@ -18,10 +18,7 @@
 
 package seccomp
 
-import (
-	"golang.org/x/net/bpf"
-	"golang.org/x/sys/unix"
-)
+import "golang.org/x/net/bpf"
 
 // Some constants from linux/elf-em.h
 const (
@@ -103,35 +100,37 @@ const (
 	SECCOMP_RET_ALLOW        = 0x7fff0000
 )
 
-// 32-bit field load instructions
-var (
-	LoadArch = bpf.LoadAbsolute{Off: 4, Size: 4}
-	LoadNr   = bpf.LoadAbsolute{Off: 0, Size: 4}
+// Generate an instruction loading AUDIT_ARCH_* value from seccomp data.
+func LoadArch() bpf.Instruction {
+	return bpf.LoadAbsolute{Off: 4, Size: 4}
+}
+
+// Generate an instruction loading the system call number from seccomp data.
+func LoadNr() bpf.Instruction {
+	return bpf.LoadAbsolute{Off: 0, Size: 4}
+}
+
+// Mark a half of a 64-bit register.
+type Half uint32
+
+const (
+	Low  Half = 0
+	High Half = 4
 )
 
-// 64-bit field load instructions.
-// For Little Endian.  BE should revert H(igh)/L(ow).
-var (
-	LoadIPLow  = bpf.LoadAbsolute{Off: 8, Size: 4}
-	LoadIPHigh = bpf.LoadAbsolute{Off: 12, Size: 4}
-	LoadA1Low  = bpf.LoadAbsolute{Off: 16, Size: 4}
-	LoadA1High = bpf.LoadAbsolute{Off: 20, Size: 4}
-	LoadA2Low  = bpf.LoadAbsolute{Off: 24, Size: 4}
-	LoadA2High = bpf.LoadAbsolute{Off: 28, Size: 4}
-	LoadA3Low  = bpf.LoadAbsolute{Off: 32, Size: 4}
-	LoadA3High = bpf.LoadAbsolute{Off: 36, Size: 4}
-	LoadA4Low  = bpf.LoadAbsolute{Off: 40, Size: 4}
-	LoadA4High = bpf.LoadAbsolute{Off: 44, Size: 4}
-	LoadA5Low  = bpf.LoadAbsolute{Off: 48, Size: 4}
-	LoadA5High = bpf.LoadAbsolute{Off: 52, Size: 4}
-	LoadA6Low  = bpf.LoadAbsolute{Off: 56, Size: 4}
-	LoadA6High = bpf.LoadAbsolute{Off: 60, Size: 4}
-)
+// Generate an instruction to load one half of instruction pointer from
+// seccomp data.
+func LoadIP(h Half) bpf.Instruction {
+	return bpf.LoadAbsolute{Off: 8 + uint32(h), Size: 4}
+}
 
-// The abbr. for CLONE_THREAD
-const tflag = uint32(unix.CLONE_THREAD)
+// Generate an instruction to load one half of a 64-bit register from
+// seccomp data.
+func LoadReg(n uint32, h Half) bpf.Instruction {
+	return bpf.LoadAbsolute{Off: 8 + n*8 + uint32(h), Size: 4}
+}
 
-// Actions
+// Seccomp actions.
 var (
 	RetOK       = bpf.RetConstant{Val: SECCOMP_RET_ALLOW}
 	RetDisallow = bpf.RetConstant{Val: SECCOMP_RET_KILL}

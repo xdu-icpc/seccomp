@@ -32,7 +32,7 @@ func TestSeccompFilter(t *testing.T) {
 	// We use SYS_GETCPU for test purpose.  Hope Go runtime doesn't
 	// need it.
 	rule := []bpf.Instruction{
-		seccomp.LoadNr,
+		seccomp.LoadNr(),
 		bpf.JumpIf{
 			Cond:      bpf.JumpEqual,
 			Val:       unix.SYS_GETCPU,

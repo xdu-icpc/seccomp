@@ -20,20 +20,23 @@
 
 package seccomp
 
-import . "golang.org/x/net/bpf"
+import (
+	. "golang.org/x/net/bpf"
+	"golang.org/x/sys/unix"
+)
 
 const x32SyscallBit = uint32(0x40000000)
 
 var noForkRule = []Instruction{
 	// 0, architecture check
-	LoadArch,
+	LoadArch(),
 	// 1, if not X86_64 skip to I386 check
 	JumpIf{Cond: JumpEqual,
 		Val:       AuditArchX86_64,
 		SkipTrue:  0,
 		SkipFalse: 5},
 	// 2, load syscall number
-	LoadNr,
+	LoadNr(),
 	// 3, remove the x32 syscall bit
 	ALUOpConstant{Op: ALUOpAnd, Val: ^x32SyscallBit},
 	// 4, if syscall is fork, return errno
@@ -53,7 +56,7 @@ var noForkRule = []Instruction{
 		SkipTrue:  4,
 		SkipFalse: 6},
 	// 7, load syscall number for I386
-	LoadNr,
+	LoadNr(),
 	// 8, if syscall is fork, return errno
 	JumpIf{Cond: JumpEqual,
 		Val:       2,
@@ -72,10 +75,10 @@ var noForkRule = []Instruction{
 		SkipFalse: 2},
 	// 11, CLONE_THREAD flag check, load the first argument, see clone(2)
 	// "C library/kernel differences".
-	LoadA1Low,
+	LoadReg(1, Low),
 	// 12, if CLONE_THREAD is set, return OK, otherwise return errno
 	JumpIf{Cond: JumpBitsSet,
-		Val:       tflag,
+		Val:       unix.CLONE_THREAD,
 		SkipTrue:  0,
 		SkipFalse: 1},
 	// 13, return OK
