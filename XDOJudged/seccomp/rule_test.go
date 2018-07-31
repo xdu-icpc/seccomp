@@ -72,7 +72,7 @@ func testRuleWith(t *testing.T, exe string, ret int) {
 		t.Fatal("can not get wait status")
 	}
 
-	if int(sys) != int(syscall.SIGSYS) {
+	if !sys.Signaled() || sys.Signal() != syscall.SIGSYS {
 		t.Fatalf("child status is %v instead of SIGSYS", sys)
 	}
 }
