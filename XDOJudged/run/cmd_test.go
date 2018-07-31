@@ -15,7 +15,7 @@ func compareRE(expect *run.RuntimeError, get *run.RuntimeError) error {
 	if expect == nil && get == nil {
 		return nil
 	}
-	if expect != nil && get != nil {
+	if expect != nil && get != nil && *expect == *get {
 		return nil
 	}
 	return fmt.Errorf("runtime error result mismatch: expect %v, get %v",
