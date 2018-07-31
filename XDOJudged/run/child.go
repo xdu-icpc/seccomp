@@ -55,7 +55,7 @@ func init() {
 		defer runtime.UnlockOSThread()
 
 		if useSeccomp {
-			err = seccomp.SeccompFilter(0, seccomp.NoForkFilter)
+			err = seccomp.SeccompFilter(0, noForkFilter)
 			if err != nil {
 				bailOut(out, "can not set seccomp filter", err)
 			}
