@@ -19,52 +19,76 @@
 package seccomp
 
 import (
-	. "debug/elf"
 	"golang.org/x/net/bpf"
 	"golang.org/x/sys/unix"
 )
 
+// Some constants from linux/elf-em.h
+const (
+	EM_SPARC      = 2
+	EM_386        = 3
+	EM_68K        = 4
+	EM_MIPS       = 8
+	EM_PARISC     = 15
+	EM_PPC        = 20
+	EM_S390       = 22
+	EM_ARM        = 40
+	EM_SH         = 42
+	EM_SPARCV9    = 43
+	EM_IA_64      = 50
+	EM_X86_64     = 62
+	EM_CRIS       = 76
+	EM_M32R       = 88
+	EM_OPENRISC   = 92
+	EM_AARCH64    = 183
+	EM_TILEPRO    = 188
+	EM_MICROBLAZE = 189
+	EM_TILEGX     = 191
+	EM_FRV        = 0x5441
+	EM_ALPHA      = 0x9026
+)
+
 // Some value from linux/audit.h
 const (
-	auditArch64Bit = 0x80000000
-	auditArchLE    = 0x40000000
-	auditArchN32   = 0x20000000
+	AuditArch64Bit = 0x80000000
+	AuditArchLE    = 0x40000000
+	AuditArchN32   = 0x20000000
 
-	AuditArchAARCH64     = uint32(EM_AARCH64) | auditArch64Bit | auditArchLE
-	AuditArchALPHA       = uint32(EM_ALPHA) | auditArch64Bit | auditArchLE
-	AuditArchARM         = uint32(EM_ARM) | auditArchLE
-	AuditArchARMEB       = uint32(EM_ARM)
-	AuditArchCRIS        = uint32(76) | auditArchLE
-	AuditArchFRV         = uint32(0x5441)
-	AuditArchI386        = uint32(EM_386) | auditArchLE
-	AuditArchIA64        = uint32(EM_IA_64) | auditArch64Bit | auditArchLE
-	AuditArchM32R        = uint32(88)
-	AuditArchM68K        = uint32(EM_68K)
-	AuditArchMICROBLAZE  = uint32(189)
-	AuditArchMIPS        = uint32(EM_MIPS)
-	AuditArchMIPSEL      = uint32(EM_MIPS) | auditArchLE
-	AuditArchMIPS64      = uint32(EM_MIPS) | auditArch64Bit
-	AuditArchMIPS64N32   = AuditArchMIPS64 | auditArchN32
-	AuditArchMIPSEL64    = AuditArchMIPS64 | auditArchLE
-	AuditArchMIPSEL64N32 = AuditArchMIPS64N32 | auditArchLE
-	AuditArchOPENRISC    = uint32(92)
-	AuditArchPARISC      = uint32(EM_PARISC)
-	AuditArchPARISC64    = uint32(EM_PARISC) | auditArch64Bit
-	AuditArchPPC         = uint32(EM_PPC)
-	AuditArchPPC64       = uint32(EM_PPC) | auditArch64Bit
-	AuditArchPPC64LE     = AuditArchPPC64 | auditArchLE
-	AuditArchS390        = uint32(EM_S390)
-	AuditArchS390X       = uint32(EM_S390) | auditArch64Bit
-	AuditArchSH          = uint32(EM_SH)
-	AuditArchSHEL        = uint32(EM_SH) | auditArchLE
-	AuditArchSH64        = uint32(EM_SH) | auditArch64Bit
-	AuditArchSHEL64      = AuditArchSHEL | auditArch64Bit
-	AuditArchSPARC       = uint32(EM_SPARC)
-	AuditArchSPARC64     = uint32(EM_SPARCV9) | auditArch64Bit
-	AuditArchTILEGX      = uint32(191) | auditArch64Bit | auditArchLE
-	AuditArchTILEGX32    = uint32(191) | auditArchLE
-	AuditArchTILEPRO     = uint32(188) | auditArchLE
-	AuditArchX86_64      = uint32(EM_X86_64) | auditArch64Bit | auditArchLE
+	AuditArchAARCH64     = EM_AARCH64 | AuditArch64Bit | AuditArchLE
+	AuditArchALPHA       = EM_ALPHA | AuditArch64Bit | AuditArchLE
+	AuditArchARM         = EM_ARM | AuditArchLE
+	AuditArchARMEB       = EM_ARM
+	AuditArchCRIS        = EM_CRIS | AuditArchLE
+	AuditArchFRV         = EM_FRV
+	AuditArchI386        = EM_386 | AuditArchLE
+	AuditArchIA64        = EM_IA_64 | AuditArch64Bit | AuditArchLE
+	AuditArchM32R        = EM_M32R
+	AuditArchM68K        = EM_68K
+	AuditArchMICROBLAZE  = EM_MICROBLAZE
+	AuditArchMIPS        = EM_MIPS
+	AuditArchMIPSEL      = EM_MIPS | AuditArchLE
+	AuditArchMIPS64      = EM_MIPS | AuditArch64Bit
+	AuditArchMIPS64N32   = AuditArchMIPS64 | AuditArchN32
+	AuditArchMIPSEL64    = AuditArchMIPS64 | AuditArchLE
+	AuditArchMIPSEL64N32 = AuditArchMIPS64N32 | AuditArchLE
+	AuditArchOPENRISC    = EM_OPENRISC
+	AuditArchPARISC      = EM_PARISC
+	AuditArchPARISC64    = EM_PARISC | AuditArch64Bit
+	AuditArchPPC         = EM_PPC
+	AuditArchPPC64       = EM_PPC | AuditArch64Bit
+	AuditArchPPC64LE     = AuditArchPPC64 | AuditArchLE
+	AuditArchS390        = EM_S390
+	AuditArchS390X       = EM_S390 | AuditArch64Bit
+	AuditArchSH          = EM_SH
+	AuditArchSHEL        = EM_SH | AuditArchLE
+	AuditArchSH64        = EM_SH | AuditArch64Bit
+	AuditArchSHEL64      = AuditArchSHEL | AuditArch64Bit
+	AuditArchSPARC       = EM_SPARC
+	AuditArchSPARC64     = EM_SPARCV9 | AuditArch64Bit
+	AuditArchTILEGX      = EM_TILEGX | AuditArch64Bit | AuditArchLE
+	AuditArchTILEGX32    = EM_TILEGX | AuditArchLE
+	AuditArchTILEPRO     = EM_TILEPRO | AuditArchLE
+	AuditArchX86_64      = EM_X86_64 | AuditArch64Bit | AuditArchLE
 )
 
 // Some value from linux/seccomp.h
