@@ -20,6 +20,7 @@ package seccomp_test
 
 import (
 	"bytes"
+	"golang.org/x/net/bpf"
 	"log"
 	"os"
 	"os/exec"
@@ -35,7 +36,11 @@ func init() {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		err := seccomp.SeccompFilter(0, seccomp.NoForkFilter)
+		ft, err := bpf.Assemble(noForkRule)
+		if err != nil {
+			log.Fatalf("bpf.Assemble: %v", err)
+		}
+		err = seccomp.SeccompFilter(0, ft)
 		if err != nil {
 			log.Fatalf("seccomp: %v", err)
 		}
@@ -72,7 +77,7 @@ func testRuleWith(t *testing.T, exe string, ret int) {
 		t.Fatal("can not get wait status")
 	}
 
-	if int(sys) != int(syscall.SIGSYS) {
+	if !sys.Signaled() || sys.Signal() != syscall.SIGSYS {
 		t.Fatalf("child status is %v instead of SIGSYS", sys)
 	}
 }
