@@ -3,7 +3,6 @@ package run
 import (
 	"bytes"
 	"fmt"
-	"golang.org/x/sys/unix"
 	"io"
 	"os"
 	"time"
@@ -12,7 +11,6 @@ import (
 )
 
 var zeroAttr Attr
-var zeroRlimit unix.Rlimit
 
 func (c *Cmd) start() (err error) {
 	attr := c.Attr
@@ -97,10 +95,12 @@ func (c *Cmd) start() (err error) {
 		})
 	}
 
-	// Do not dump core
-	err = prlimit(c.Process.Pid, unix.RLIMIT_CORE, &zeroRlimit, nil)
-	if err != nil {
-		return err
+	// Set up resource limits
+	for _, rlim := range attr.ResourceLimit {
+		err := prlimit(c.Process.Pid, rlim.Resource, &rlim.Rlimit, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Grant the child to continue
