@@ -124,15 +124,43 @@ func (cg *Cgroup) IsV2(c Controller) (bool, error) {
 	return cg.fsid[c] == cg.fsid[V2], nil
 }
 
+func writePid(path string, pid int) error {
+	w, err := openForWrite(path + "/cgroups.proc")
+	defer w.Close()
+
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(w, "%d", pid)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (cg *Cgroup) Attach(pid int) error {
-	for _, p := range cg.fs {
-		w, err := openForWrite(p + "/cgroups.proc")
+	// At first do permission check with cgroup v2 with correct delegation
+	// support, if we have it.
+	v2id := cg.fsid[V2]
+	if v2id != 0 {
+		p := cg.fs[v2id-1]
+		err := writePid(p, pid)
 		if err != nil {
+			// If permission check fails this would be EPERM.
 			return err
 		}
-		_, err = fmt.Fprintf(w, "%d", pid)
-		if err != nil {
-			return err
+	}
+
+	for i, p := range cg.fs {
+		if i != v2id {
+			w, err := openForWrite(p + "/cgroups.proc")
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintf(w, "%d", pid)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
