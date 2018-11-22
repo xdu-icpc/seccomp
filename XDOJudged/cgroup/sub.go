@@ -55,7 +55,7 @@ func (cg *Cgroup) pushdownV2() error {
 // under it into the leaf.
 //
 // If ToInnerNode fails and return an error, it's likely to leave an
-// incosistent cgroup hierarchy.  Maybe panic is the only thing we can do.
+// inconsistent cgroup hierarchy.  Maybe panic is the only thing we can do.
 func (cg *Cgroup) ToInnerNode() (leaf *Cgroup, err error) {
 	leaf, err = cg.fork("_leaf_")
 	if err != nil {
@@ -123,4 +123,18 @@ func (cg *Cgroup) ToInnerNode() (leaf *Cgroup, err error) {
 	}
 
 	return leaf, nil
+}
+
+func (cg *Cgroup) Fork(name string) (child *Cgroup, err error) {
+	child, err = cg.fork(name)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cg.pushdownV2()
+	if err != nil {
+		return nil, err
+	}
+
+	return
 }
