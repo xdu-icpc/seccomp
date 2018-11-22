@@ -104,7 +104,7 @@ func getControllers(names []string) []Controller {
 // To distinguish from empty value, all pathes would begin with "/",
 // just like the third field in /proc/{pid}/cgroup.
 func parseProcCgroup(pid int) (path []string, err error) {
-	fn := fmt.Sprintf("/proc/%d/cgroup", os.Getpid())
+	fn := fmt.Sprintf("/proc/%d/cgroup", pid)
 	inf, err := os.Open(fn)
 	if err != nil {
 		return nil, err
