@@ -22,19 +22,17 @@ import (
 	"os"
 )
 
-func (cg *Cgroup) getPath(c Controller, key string, prefixed bool) (string,
+func (cg *Cgroup) getPath(c Controller, key string) (string,
 	error) {
 	if cg.fsid[c] == 0 {
 		return "", ErrNoController
 	}
-	if !prefixed {
-		key = string(c) + "." + key
-	}
+	key = string(c) + "." + key
 	return cg.fs[cg.fsid[c]-1] + "/" + string(c) + "." + key, nil
 }
 
 func (cg *Cgroup) OpenForRead(c Controller, key string) (*os.File, error) {
-	p, err := cg.getPath(c, key, false)
+	p, err := cg.getPath(c, key)
 	if err != nil {
 		return nil, err
 	}
