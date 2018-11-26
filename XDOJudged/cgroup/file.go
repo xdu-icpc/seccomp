@@ -42,3 +42,11 @@ func (cg *Cgroup) OpenForRead(c Controller, key string) (*os.File, error) {
 func openForWrite(p string) (*os.File, error) {
 	return os.OpenFile(p, os.O_WRONLY, 0600)
 }
+
+func (cg *Cgroup) OpenForWrite(c Controller, key string) (*os.File, error) {
+	p, err := cg.getPath(c, key)
+	if err != nil {
+		return nil, err
+	}
+	return openForWrite(p)
+}
