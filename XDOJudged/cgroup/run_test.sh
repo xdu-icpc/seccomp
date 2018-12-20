@@ -18,4 +18,4 @@
 
 # Author: Xi Ruoyao <xry111@mengyan1223.wang>
 
-systemd-run -t -p Delegate=yes -p DynamicUser=yes -E GOPATH=$GOPATH -- `which go` test linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/cgroup -v
+systemd-run -p User=$USER -t -p Delegate=yes -E GOPATH=$GOPATH -- `which go` test linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/cgroup -v -test.coverprofile=$PWD/cov
