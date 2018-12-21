@@ -31,6 +31,7 @@ func (cg *Cgroup) getPath(c Controller, key string) (string,
 	return cg.fs[cg.fsid[c]-1] + "/" + string(c) + "." + key, nil
 }
 
+// Open a Cgroup file for read.
 func (cg *Cgroup) OpenForRead(c Controller, key string) (*os.File, error) {
 	p, err := cg.getPath(c, key)
 	if err != nil {
@@ -43,6 +44,7 @@ func openForWrite(p string) (*os.File, error) {
 	return os.OpenFile(p, os.O_WRONLY, 0600)
 }
 
+// Open a Cgroup file for write.
 func (cg *Cgroup) OpenForWrite(c Controller, key string) (*os.File, error) {
 	p, err := cg.getPath(c, key)
 	if err != nil {

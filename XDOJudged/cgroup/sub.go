@@ -143,6 +143,8 @@ func (cg *Cgroup) ToInnerNode() (leaf *Cgroup, err error) {
 	return leaf, nil
 }
 
+// Create a child Cgroup of cg.  If cg have V2 Controller, it must be
+// a inner node.
 func (cg *Cgroup) Fork(name string) (child *Cgroup, err error) {
 	child, err = cg.fork(name)
 	if err != nil {

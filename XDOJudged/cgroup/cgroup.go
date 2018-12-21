@@ -137,6 +137,7 @@ func (cg *Cgroup) SetController(list []Controller) error {
 	return nil
 }
 
+// Check if a Controller is mounted as Cgroup V2.
 func (cg *Cgroup) IsV2(c Controller) (bool, error) {
 	if cg.fsid[c] == 0 {
 		return false, ErrNoController
@@ -158,6 +159,9 @@ func writePid(path string, pid int) error {
 	return nil
 }
 
+// Attach the process with specified pid to the Cgroup.  If this function
+// fails and returns an error, this process may be in inconsistent status
+// and may have to be killed.
 func (cg *Cgroup) Attach(pid int) error {
 	// At first do permission check with cgroup v2 with correct delegation
 	// support, if we have it.
