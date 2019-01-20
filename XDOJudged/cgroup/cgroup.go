@@ -1,5 +1,5 @@
 // Cgroup basic functions
-// Copyright (C) 2018  Laboratory of ICPC, Xidian University
+// Copyright (C) 2018-2019  Laboratory of ICPC, Xidian University
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -28,6 +28,8 @@ import (
 	"strings"
 )
 
+// Cgroup is a collection of processes that are bound to a set of defined
+// limits or parameters.
 type Cgroup struct {
 	// Pathes to hierarchy
 	fs []string

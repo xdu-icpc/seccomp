@@ -1,5 +1,5 @@
 // Cgroup controller definition and pretty printer.
-// Copyright (C) 2018  Laboratory of ICPC, Xidian University
+// Copyright (C) 2018-2019  Laboratory of ICPC, Xidian University
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -18,6 +18,8 @@
 
 package cgroup
 
+// A Controller is a component that modifies the behavior of the processes
+// in a cgroup.
 type Controller int
 
 const (
