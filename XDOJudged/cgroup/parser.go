@@ -96,7 +96,7 @@ func getCgroup2Controllers(path string) ([]Controller, error) {
 }
 
 func getControllersFromOption(option string) []Controller {
-	names := strings.Split(option, " ")
+	names := strings.Split(option, ",")
 	return getControllers(names)
 }
 
