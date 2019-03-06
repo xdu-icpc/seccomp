@@ -53,7 +53,6 @@ func TestHelperProcess(*testing.T) {
 func TestRuntimeError(t *testing.T) {
 	type test struct {
 		name    string
-		command string
 		attr    *run.Attr
 		sysattr *syscall.SysProcAttr
 		re      *run.RuntimeError
@@ -65,10 +64,9 @@ func TestRuntimeError(t *testing.T) {
 	}
 
 	tests := []test{
-		{name: "TestHelloWorld", command: "testdata/hw"},
+		{name: "TestHelloWorld"},
 		{
 			name:    "TestTLE",
-			command: "testdata/loop",
 			attr: &run.Attr{
 				CPUTimeLimit: &tl,
 			},
@@ -79,7 +77,6 @@ func TestRuntimeError(t *testing.T) {
 		},
 		{
 			name:    "TestILE",
-			command: "testdata/loop",
 			attr: &run.Attr{
 				WallTimeLimit: &tl,
 			},
@@ -90,7 +87,6 @@ func TestRuntimeError(t *testing.T) {
 		},
 		{
 			name:    "TestNoCapability",
-			command: "testdata/chroot",
 			sysattr: &syscall.SysProcAttr{
 				Chroot:      "/",
 				Cloneflags:  syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER,
@@ -102,10 +98,9 @@ func TestRuntimeError(t *testing.T) {
 				Code:   125,
 			},
 		},
-		{name: "TestFork", command: "testdata/fork"},
+		{name: "TestFork"},
 		{
 			name:    "TestNoFork",
-			command: "testdata/fork",
 			attr: &run.Attr{
 				CPUTimeLimit: &tl,
 			},
