@@ -39,7 +39,7 @@ func TestHelperProcess(*testing.T) {
 		}
 	case "TestNoCapability":
 		err := unix.Chroot("/")
-		if err != nil {
+		if err == unix.EPERM {
 			os.Exit(125)
 		}
 	case "TestFork", "TestNoFork":
