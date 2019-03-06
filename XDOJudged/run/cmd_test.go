@@ -11,6 +11,20 @@ import (
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/run"
 )
 
+func init() {
+	if os.Getenv("GO_XDOJ_RUN_TEST_PROC") == "1" {
+		return
+	}
+	err := unix.Setrlimit(unix.RLIMIT_STACK, &unix.Rlimit{
+		Cur: 8388608,
+		Max: unix.RLIM_INFINITY,
+	})
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+}
+
 func compareRE(expect *run.RuntimeError, get *run.RuntimeError) error {
 	if expect == nil && get == nil {
 		return nil
@@ -38,6 +52,10 @@ func TestHelperProcess(*testing.T) {
 		for {
 		}
 	case "TestNoCapability":
+		if os.Getuid() != 0 {
+			os.Exit(1)
+		}
+
 		err := unix.Chroot("/")
 		if err == unix.EPERM {
 			os.Exit(125)
@@ -47,6 +65,17 @@ func TestHelperProcess(*testing.T) {
 			"TestHelloWorld")
 		cmd.Stdout = os.Stdout
 		cmd.Start()
+	case "TestRlimit":
+		rlim := unix.Rlimit{}
+		err := unix.Getrlimit(unix.RLIMIT_STACK, &rlim)
+		if err != nil {
+			fmt.Printf("can not get rlimit: %v\n", err)
+			os.Exit(1)
+		}
+		if rlim.Cur != unix.RLIM_INFINITY {
+			fmt.Printf("stack is limited to %d\n", rlim.Cur)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -107,6 +136,20 @@ func TestRuntimeError(t *testing.T) {
 			re: &run.RuntimeError{
 				Reason: run.ReasonUnknown,
 				Code:   -int(unix.SIGSYS),
+			},
+		},
+		{
+			name: "TestRlimit",
+			attr: &run.Attr{
+				ResourceLimit: []run.ResourceLimit{
+					{
+						Resource: unix.RLIMIT_STACK,
+						Rlimit:   unix.Rlimit{
+							Cur: unix.RLIM_INFINITY,
+							Max: unix.RLIM_INFINITY,
+						},
+					},
+				},
 			},
 		},
 	}
