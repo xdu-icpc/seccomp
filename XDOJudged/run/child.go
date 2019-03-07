@@ -18,6 +18,7 @@ const ChildName = "[xdoj child]"
 
 var syncFlag = []byte{0x19, 0x26, 0x08, 0x17}
 
+// I tend to use unix.FcntlInt, but its error handling is abnormal.
 func closeOnExec(fd uintptr) error {
 	_, _, errno := unix.RawSyscall(unix.SYS_FCNTL, fd, unix.F_SETFD,
 		unix.FD_CLOEXEC)
