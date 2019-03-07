@@ -1,4 +1,3 @@
-// High level package for XDOJ sandbox function.
 package run
 
 import (
