@@ -62,14 +62,15 @@ func init() {
 		}
 
 		// TODO: Set up new namespace.
-		cap, err := capability.NewPid2(0)
+
+		capset, err := capability.NewPid2(0)
 
 		if err != nil {
 			bailOut(out, "can not init capability set", err)
 		}
 
-		cap.Clear(capability.BOUNDING)
-		err = cap.Apply(capability.BOUNDING)
+		capset.Clear(capability.BOUNDING)
+		err = capset.Apply(capability.BOUNDING)
 		if err != nil {
 			bailOut(out, "can not clear capability bounding set", err)
 		}
