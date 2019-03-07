@@ -76,6 +76,12 @@ func TestHelperProcess(*testing.T) {
 			fmt.Printf("stack is limited to %d\n", rlim.Cur)
 			os.Exit(1)
 		}
+	case "TestSigstop":
+		err := unix.Kill(0, unix.SIGSTOP)
+		if err != nil {
+			fmt.Printf("can not stop myself: %v\n", err)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -174,6 +180,14 @@ func TestRuntimeError(t *testing.T) {
 						},
 					},
 				},
+			},
+		},
+		{
+			name: "TestSigstop",
+			sysattr: &syscall.SysProcAttr{Setpgid: true},
+			re: &run.RuntimeError{
+				Reason: run.ReasonUnknown,
+				Code:   -int(unix.SIGSTOP),
 			},
 		},
 	}
