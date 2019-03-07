@@ -97,7 +97,8 @@ func TestStart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("usage = %v, re = %v", usage, re)
+	t.Logf("usage = %v", usage)
+	t.Logf("re = %v", re)
 }
 
 func TestRuntimeError(t *testing.T) {
@@ -180,7 +181,7 @@ func TestRuntimeError(t *testing.T) {
 			},
 		},
 		{
-			name: "TestSigstop",
+			name:    "TestSigstop",
 			sysattr: &syscall.SysProcAttr{Setpgid: true},
 			re: &run.RuntimeError{
 				Reason: run.ReasonUnknown,
