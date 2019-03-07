@@ -3,6 +3,7 @@ package run_test
 import (
 	"fmt"
 	"golang.org/x/sys/unix"
+	"log"
 	"os"
 	"syscall"
 	"testing"
@@ -20,7 +21,6 @@ func init() {
 		Max: unix.RLIM_INFINITY,
 	})
 	if err != nil {
-		fmt.Println(err)
 		panic(err)
 	}
 }
@@ -53,7 +53,7 @@ func TestHelperProcess(*testing.T) {
 		}
 	case "TestNoCapability":
 		if os.Getuid() != 0 {
-			os.Exit(1)
+			log.Fatalf("UID is not 0")
 		}
 
 		err := unix.Chroot("/")
@@ -69,18 +69,15 @@ func TestHelperProcess(*testing.T) {
 		rlim := unix.Rlimit{}
 		err := unix.Getrlimit(unix.RLIMIT_STACK, &rlim)
 		if err != nil {
-			fmt.Printf("can not get rlimit: %v\n", err)
-			os.Exit(1)
+			log.Fatalf("can not get rlimit: %v\n", err)
 		}
 		if rlim.Cur != unix.RLIM_INFINITY {
-			fmt.Printf("stack is limited to %d\n", rlim.Cur)
-			os.Exit(1)
+			log.Fatalf("stack is limited to %d\n", rlim.Cur)
 		}
 	case "TestSigstop":
 		err := unix.Kill(0, unix.SIGSTOP)
 		if err != nil {
-			fmt.Printf("can not stop myself: %v\n", err)
-			os.Exit(1)
+			log.Fatalf("can not stop myself: %v\n", err)
 		}
 	}
 }
