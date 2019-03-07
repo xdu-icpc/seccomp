@@ -95,7 +95,7 @@ func TestRuntimeError(t *testing.T) {
 	tests := []test{
 		{name: "TestHelloWorld"},
 		{
-			name:    "TestTLE",
+			name: "TestTLE",
 			attr: &run.Attr{
 				CPUTimeLimit: &tl,
 			},
@@ -105,7 +105,7 @@ func TestRuntimeError(t *testing.T) {
 			},
 		},
 		{
-			name:    "TestILE",
+			name: "TestILE",
 			attr: &run.Attr{
 				WallTimeLimit: &tl,
 			},
@@ -115,7 +115,7 @@ func TestRuntimeError(t *testing.T) {
 			},
 		},
 		{
-			name:    "TestNoCapability",
+			name: "TestNoCapability",
 			sysattr: &syscall.SysProcAttr{
 				Chroot:      "/",
 				Cloneflags:  syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER,
@@ -129,7 +129,7 @@ func TestRuntimeError(t *testing.T) {
 		},
 		{name: "TestFork"},
 		{
-			name:    "TestNoFork",
+			name: "TestNoFork",
 			attr: &run.Attr{
 				CPUTimeLimit: &tl,
 			},
@@ -144,7 +144,7 @@ func TestRuntimeError(t *testing.T) {
 				ResourceLimit: []run.ResourceLimit{
 					{
 						Resource: unix.RLIMIT_STACK,
-						Rlimit:   unix.Rlimit{
+						Rlimit: unix.Rlimit{
 							Cur: unix.RLIM_INFINITY,
 							Max: unix.RLIM_INFINITY,
 						},
