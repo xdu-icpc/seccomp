@@ -150,6 +150,12 @@ func TestRuntimeError(t *testing.T) {
 			name: "TestNoFork",
 			attr: &run.Attr{
 				CPUTimeLimit: &tl,
+				ResourceLimit: []run.ResourceLimit{
+					{
+						Resource: unix.RLIMIT_CORE,
+						Rlimit:   unix.Rlimit{Cur: 0, Max: 0},
+					},
+				},
 			},
 			re: &run.RuntimeError{
 				Reason: run.ReasonUnknown,
