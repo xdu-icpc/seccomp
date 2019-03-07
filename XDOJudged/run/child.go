@@ -19,6 +19,15 @@ const ChildName = "[xdoj child]"
 
 var syncFlag = []byte{0x19, 0x26, 0x08, 0x17}
 
+func closeOnExec(fd uintptr) error {
+	_, _, errno := unix.RawSyscall(unix.SYS_FCNTL, fd, unix.F_SETFD,
+		unix.FD_CLOEXEC)
+	if errno != 0 {
+		return errno
+	}
+	return nil
+}
+
 func bailOut(w io.Writer, msg string, err error) {
 	pid := os.Getpid()
 	fmt.Fprintf(w, "%s[%d]: %s: %v", ChildName, pid, msg, err)
@@ -40,13 +49,22 @@ func init() {
 		in := os.NewFile(3, "|0")
 		out := os.NewFile(4, "|1")
 
+		err := closeOnExec(3)
+		if err != nil {
+			bailOut(out, "can not set |0 to close on exec", err)
+		}
+		err = closeOnExec(4)
+		if err != nil {
+			bailOut(out, "can not set |1 to close on exec", err)
+		}
+
 		// Parse argument list.
 		fs := flag.NewFlagSet(ChildName, flag.ContinueOnError)
 
 		useSeccomp := true
 		fs.BoolVar(&useSeccomp, "seccomp", true, "enable seccomp filter")
 
-		err := fs.Parse(os.Args[1:])
+		err = fs.Parse(os.Args[1:])
 		if err != nil {
 			bailOut(out, "can not parse arguments", err)
 		}
@@ -84,10 +102,8 @@ func init() {
 			os.Exit(1)
 		}
 
-		// The Go pipes have CLOEXEC set.  We let execve() to close |1,
-		// instead of close it manually.  So, if the parent get an EOF
-		// on the other end of the pipe, it can be sure that execve() has
-		// succeeded.
+		// We've set CLOEXEC.  So, if the parent get an EOF on the other
+		// end of the pipe, it can be sure that execve() has succeeded.
 		err = unix.Exec(cmdline[0], cmdline[1:], os.Environ())
 
 		// Exec failed.  Dump the error message.

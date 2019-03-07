@@ -79,6 +79,24 @@ func TestHelperProcess(*testing.T) {
 	}
 }
 
+func TestStart(t *testing.T) {
+	cmd := run.Command(os.Args[0], "-test.run=TestHelperProcess", "TestTLE")
+	cmd.Env = []string{"GO_XDOJ_RUN_TEST_PROC=1"}
+	err := cmd.Start()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd.Process.Kill()
+	if err != nil {
+		t.Fatal(err)
+	}
+	usage, re, err := cmd.Wait()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("usage = %v, re = %v", usage, re)
+}
+
 func TestRuntimeError(t *testing.T) {
 	type test struct {
 		name    string
