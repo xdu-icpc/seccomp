@@ -1,5 +1,10 @@
 package run
 
+import (
+	"fmt"
+	"syscall"
+)
+
 // RuntimeErrorReason represents a deduced reason of the runtime error.
 type RuntimeErrorReason int
 
@@ -24,4 +29,26 @@ type RuntimeError struct {
 
 	// The deduced reason of runtime error.
 	Reason RuntimeErrorReason
+}
+
+func (re *RuntimeError) String() string {
+	if re == nil {
+		return "ok, no runtime error"
+	}
+	switch re.Reason {
+	case ReasonUnknown:
+		if re.Code < 0 {
+			return fmt.Sprintf("killed by signal %d (%v)", -re.Code,
+				syscall.Signal(-re.Code))
+		} else if re.Code > 0 {
+			return fmt.Sprintf("no zero return code %d", re.Code)
+		}
+	case ReasonCPUTimeLimit:
+		return "time limit exceeded (CPU)"
+	case ReasonWallTimeLimit:
+		return "time limit exceeded (wallclock)"
+	case ReasonMemoryLimit:
+		return "memory limit exceeded"
+	}
+	return "wat the fuck?"
 }
