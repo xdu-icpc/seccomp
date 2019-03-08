@@ -43,6 +43,17 @@ func (c *Cmd) start() (err error) {
 		args = append(args, "-seccomp=false")
 	}
 
+	// Delegate chroot to our helper.
+	// If we chroot too early, we can't find this executable in chroot and
+	// can not start the helper.
+	chroot := ""
+	if c.SysProcAttr != nil {
+		chroot, c.SysProcAttr.Chroot = c.SysProcAttr.Chroot, chroot
+	}
+	if chroot != "" {
+		args = append(args, "-chroot="+chroot)
+	}
+
 	c.ExtraFiles = []*os.File{out1, in1}
 	args = append(args, "--", c.Path)
 	c.Args = append(args, c.Args...)

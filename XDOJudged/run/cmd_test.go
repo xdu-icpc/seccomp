@@ -5,6 +5,7 @@ import (
 	"golang.org/x/sys/unix"
 	"log"
 	"os"
+	"path/filepath"
 	"syscall"
 	"testing"
 	"time"
@@ -44,7 +45,7 @@ func TestHelperProcess(*testing.T) {
 
 	testName := os.Args[2]
 	switch testName {
-	case "TestHelloWorld":
+	case "TestHelloWorld", "TestChroot":
 		fmt.Println("Hello, world.")
 	case "TestILE":
 		select {}
@@ -102,11 +103,13 @@ func TestStart(t *testing.T) {
 }
 
 func TestRuntimeError(t *testing.T) {
+	type transform func(*run.Cmd)
 	type test struct {
-		name    string
-		attr    *run.Attr
-		sysattr *syscall.SysProcAttr
-		re      *run.RuntimeError
+		name      string
+		attr      *run.Attr
+		sysattr   *syscall.SysProcAttr
+		re        *run.RuntimeError
+		transform transform
 	}
 
 	tl := time.Millisecond * 200
@@ -188,6 +191,21 @@ func TestRuntimeError(t *testing.T) {
 				Code:   -int(unix.SIGSTOP),
 			},
 		},
+		{
+			// TODO: bind mount some directories
+			// Now we need static link for this test
+			// (-ldflags=-extldflags=-static)
+			name: "[Broken!]TestChroot",
+			sysattr: &syscall.SysProcAttr{
+				Cloneflags:  unix.CLONE_NEWUSER,
+				UidMappings: idMap,
+				GidMappings: idMap,
+			},
+			transform: func(c *run.Cmd) {
+				c.SysProcAttr.Chroot = filepath.Dir(c.Path)
+				c.Path = "/" + filepath.Base(c.Path)
+			},
+		},
 	}
 
 	for _, i := range tests {
@@ -199,6 +217,9 @@ func TestRuntimeError(t *testing.T) {
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
 			cmd.Env = []string{"GO_XDOJ_RUN_TEST_PROC=1"}
+			if i.transform != nil {
+				i.transform(cmd)
+			}
 			usage, re, err := cmd.Run()
 			if err != nil {
 				t.Fatal("can not run the command:", err)

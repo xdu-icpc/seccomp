@@ -64,6 +64,9 @@ func init() {
 		useSeccomp := true
 		fs.BoolVar(&useSeccomp, "seccomp", true, "enable seccomp filter")
 
+		chroot := ""
+		fs.StringVar(&chroot, "chroot", "", "chroot into the directory")
+
 		err = fs.Parse(os.Args[1:])
 		if err != nil {
 			bailOut(out, "can not parse arguments", err)
@@ -80,6 +83,13 @@ func init() {
 		}
 
 		// TODO: Set up new namespace.
+
+		if chroot != "" {
+			err := unix.Chroot(chroot)
+			if err != nil {
+				bailOut(out, "can not chroot", err)
+			}
+		}
 
 		capset, err := capability.NewPid2(0)
 
