@@ -2,31 +2,15 @@ package run
 
 import (
 	"golang.org/x/sys/unix"
-	"strings"
 	"time"
+
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
 )
 
 type ResourceLimit struct {
 	Resource int
 	Rlimit   unix.Rlimit
 }
-
-type BindMount struct {
-	OldDir, NewDir string
-	NoRecursive, ReadOnly bool
-}
-
-func (bind *BindMount) String() string {
-	path := []string{bind.OldDir, bind.NewDir, "noro", "rbind"}
-	if bind.ReadOnly {
-		path[2] = "ro"
-	}
-	if bind.NoRecursive {
-		path[3] = "norbind"
-	}
-	return strings.Join(path, ":")
-}
-
 
 // Attr holds the attributes that will be applied to a new process started
 // by this package.
@@ -39,7 +23,7 @@ type Attr struct {
 
 	ResourceLimit []ResourceLimit
 
-	BindMount []BindMount
+	BindMount []bind.BindMount
 
 	// TODO: Fields for cgroups...
 }

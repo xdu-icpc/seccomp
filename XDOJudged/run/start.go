@@ -89,17 +89,11 @@ func (c *Cmd) start() (err error) {
 			return ErrBindUnsafe
 		}
 		for _, item := range attr.BindMount {
-			item.OldDir, err = sanitizePathForBind(item.OldDir)
+			item1, err := item.Sanitize()
 			if err != nil {
 				return err
 			}
-			item.NewDir, err = sanitizePathForBind(item.NewDir)
-			if err != nil {
-				return err
-			}
-			item.OldDir = filepath.Clean(item.OldDir)
-			item.NewDir = filepath.Clean(item.NewDir)
-			args = append(args, "-bind=" + item.String())
+			args = append(args, "-bind=" + item1.String())
 		}
 	}
 

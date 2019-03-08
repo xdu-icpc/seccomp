@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/run"
 )
 
@@ -195,7 +196,7 @@ func TestRuntimeError(t *testing.T) {
 			// Still fragile.  Will fail on systems w/o /lib64, etc.
 			name: "TestChroot",
 			attr: &run.Attr{
-				BindMount: []run.BindMount{
+				BindMount: []bind.BindMount{
 					{
 						OldDir: "/lib",
 						NewDir: "/lib",

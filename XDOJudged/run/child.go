@@ -6,11 +6,11 @@ import (
 	"golang.org/x/sys/unix"
 	"io"
 	"os"
-	"strings"
 	"runtime"
 
 	"github.com/gyepisam/multiflag"
 	"github.com/syndtr/gocapability/capability"
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
 )
 
@@ -73,7 +73,7 @@ func init() {
 		chroot := ""
 		fs.StringVar(&chroot, "chroot", "", "chroot into the directory")
 
-		bind := multiflag.StringSet(fs, "bind", "none",
+		bindArg := multiflag.StringSet(fs, "bind", "none",
 			"bind mount a file or directory into chroot", "")
 
 		err = fs.Parse(os.Args[1:])
@@ -91,37 +91,18 @@ func init() {
 			}
 		}
 
-		for _, item := range bind.Args() {
-			path := strings.Split(item, ":")
-			// "<old>:<new>:<ro>:<rbind>"
-			if len(path) != 4 {
-				bailOut(out, "can not parse --bind=" + item, err)
-			}
-			oldDir, newDir := path[0], chroot + path[1]
-			ro := (path[2] == "ro")
-			rbind := (path[3] == "rbind")
-			flag := unix.MS_BIND
-			if rbind {
-				flag |= unix.MS_REC
-			}
-
-			err := os.MkdirAll(newDir, 0755)
+		for _, item := range bindArg.Args() {
+			b, err := bind.Parse(item)
 			if err != nil {
-				bailOut(out, "can not create mount point " + newDir, err)
+				bailOut(out, "can not parse --bind", err)
 			}
-			err = unix.Mount(oldDir, newDir, "", unix.MS_BIND, "")
+			b, err = b.Sanitize()
 			if err != nil {
-				bailOut(out, "can not bind mount " + item, err)
+				bailOut(out, "can not sanitize --bind", err)
 			}
-
-			if ro {
-				// modify the per-mount-point flags to be read-only
-				err := unix.Mount(oldDir, newDir, "",
-					unix.MS_BIND | unix.MS_REMOUNT | unix.MS_RDONLY, "")
-				if err != nil {
-					bailOut(out, "can not remount the bind mount " +
-						item + " to be read-only", err)
-				}
+			err = b.DoMountWithChroot(chroot)
+			if err != nil {
+				bailOut(out, "can not mount", err)
 			}
 		}
 
