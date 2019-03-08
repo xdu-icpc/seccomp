@@ -192,12 +192,24 @@ func TestRuntimeError(t *testing.T) {
 			},
 		},
 		{
-			// TODO: bind mount some directories
-			// Now we need static link for this test
-			// (-ldflags=-extldflags=-static)
-			name: "[Broken!]TestChroot",
+			// Still fragile.  Will fail on systems w/o /lib64, etc.
+			name: "TestChroot",
+			attr: &run.Attr{
+				BindMount: []run.BindMount{
+					{
+						OldDir: "/lib",
+						NewDir: "/lib",
+						ReadOnly: true,
+					},
+					{
+						OldDir: "/lib64",
+						NewDir: "/lib64",
+						ReadOnly: true,
+					},
+				},
+			},
 			sysattr: &syscall.SysProcAttr{
-				Cloneflags:  unix.CLONE_NEWUSER,
+				Cloneflags:  unix.CLONE_NEWUSER | unix.CLONE_NEWNS,
 				UidMappings: idMap,
 				GidMappings: idMap,
 			},

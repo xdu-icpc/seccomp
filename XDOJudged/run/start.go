@@ -2,13 +2,20 @@ package run
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"golang.org/x/sys/unix"
 	"io"
 	"os"
 	"time"
 
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/posixtime"
 )
+
+var ErrBindWithoutChroot = errors.New("bind mount only makes sense with " +
+	"chroot")
+var ErrBindUnsafe = errors.New("bind mount is too dangerous with out new " +
+	"mount namespace")
 
 var zeroAttr Attr
 
@@ -52,6 +59,18 @@ func (c *Cmd) start() (err error) {
 	}
 	if chroot != "" {
 		args = append(args, "-chroot="+chroot)
+	}
+
+	if len(attr.BindMount) != 0 {
+		if chroot == "" {
+			return ErrBindWithoutChroot
+		}
+		if c.SysProcAttr.Cloneflags&unix.CLONE_NEWNS != unix.CLONE_NEWNS {
+			return ErrBindUnsafe
+		}
+		for _, item := range attr.BindMount {
+			args = append(args, "-bind=" + item.String())
+		}
 	}
 
 	c.ExtraFiles = []*os.File{out1, in1}

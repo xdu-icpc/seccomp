@@ -6,8 +6,10 @@ import (
 	"golang.org/x/sys/unix"
 	"io"
 	"os"
+	"strings"
 	"runtime"
 
+	"github.com/gyepisam/multiflag"
 	"github.com/syndtr/gocapability/capability"
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
 )
@@ -30,7 +32,11 @@ func closeOnExec(fd uintptr) error {
 
 func bailOut(w io.Writer, msg string, err error) {
 	pid := os.Getpid()
-	fmt.Fprintf(w, "%s[%d]: %s: %v", ChildName, pid, msg, err)
+	if err != nil {
+		fmt.Fprintf(w, "%s[%d]: %s: %v", ChildName, pid, msg, err)
+	} else {
+		fmt.Fprintf(w, "%s[%d]: %s", ChildName, pid, msg)
+	}
 	os.Exit(1)
 }
 
@@ -67,6 +73,9 @@ func init() {
 		chroot := ""
 		fs.StringVar(&chroot, "chroot", "", "chroot into the directory")
 
+		bind := multiflag.StringSet(fs, "bind", "none",
+			"bind mount a file or directory into chroot", "")
+
 		err = fs.Parse(os.Args[1:])
 		if err != nil {
 			bailOut(out, "can not parse arguments", err)
@@ -82,7 +91,39 @@ func init() {
 			}
 		}
 
-		// TODO: Set up new namespace.
+		for _, item := range bind.Args() {
+			path := strings.Split(item, ":")
+			// "<old>:<new>:<ro>:<rbind>"
+			if len(path) != 4 {
+				bailOut(out, "can not parse --bind=" + item, err)
+			}
+			oldDir, newDir := path[0], chroot + path[1]
+			ro := (path[2] == "ro")
+			rbind := (path[3] == "rbind")
+			flag := unix.MS_BIND
+			if rbind {
+				flag |= unix.MS_REC
+			}
+
+			err := os.MkdirAll(newDir, 0755)
+			if err != nil {
+				bailOut(out, "can not create mount point " + newDir, err)
+			}
+			err = unix.Mount(oldDir, newDir, "", unix.MS_BIND, "")
+			if err != nil {
+				bailOut(out, "can not bind mount " + item, err)
+			}
+
+			if ro {
+				// modify the per-mount-point flags to be read-only
+				err := unix.Mount(oldDir, newDir, "",
+					unix.MS_BIND | unix.MS_REMOUNT | unix.MS_RDONLY, "")
+				if err != nil {
+					bailOut(out, "can not remount the bind mount " +
+						item + " to be read-only", err)
+				}
+			}
+		}
 
 		if chroot != "" {
 			err := unix.Chroot(chroot)
