@@ -198,13 +198,13 @@ func TestRuntimeError(t *testing.T) {
 			attr: &run.Attr{
 				BindMount: []bind.BindMount{
 					{
-						OldDir: "/lib",
-						NewDir: "/lib",
+						OldDir:   "/lib",
+						NewDir:   "/lib",
 						ReadOnly: true,
 					},
 					{
-						OldDir: "/lib64",
-						NewDir: "/lib64",
+						OldDir:   "/lib64",
+						NewDir:   "/lib64",
 						ReadOnly: true,
 					},
 				},

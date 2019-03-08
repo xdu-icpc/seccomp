@@ -18,7 +18,7 @@ var ErrBindWithoutChroot = errors.New("bind mount only makes sense with " +
 var ErrBindUnsafe = errors.New("bind mount is too dangerous with out new " +
 	"mount namespace")
 
-type errPathInvalid struct{
+type errPathInvalid struct {
 	path string
 }
 
@@ -93,7 +93,7 @@ func (c *Cmd) start() (err error) {
 			if err != nil {
 				return err
 			}
-			args = append(args, "-bind=" + item1.String())
+			args = append(args, "-bind="+item1.String())
 		}
 	}
 
