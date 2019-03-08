@@ -14,7 +14,23 @@ func (b *BindMount) DoMountWithChroot(chroot string) error {
 	}
 
 	mountPoint := chroot + b.NewDir
-	err = os.MkdirAll(mountPoint, 0755)
+
+	info, err := os.Lstat(b.OldDir)
+	if err != nil {
+		return fmt.Errorf("can not stat %s: %v", b.OldDir, err)
+	}
+
+	if info.IsDir() {
+		err = os.MkdirAll(mountPoint, 0755)
+	} else {
+		info, err = os.Lstat(mountPoint)
+		if os.IsNotExist(err) {
+			var file *os.File
+			file, err = os.Create(mountPoint)
+			file.Close()
+		}
+	}
+
 	if err != nil {
 		return fmt.Errorf("can not create mount point %s: %v", b.NewDir,
 			err)

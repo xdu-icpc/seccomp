@@ -198,6 +198,10 @@ func TestRuntimeError(t *testing.T) {
 			attr: &run.Attr{
 				BindMount: []bind.BindMount{
 					{
+						OldDir: os.Args[0],
+						NewDir: "/test",
+					},
+					{
 						OldDir:   "/lib",
 						NewDir:   "/lib",
 						ReadOnly: true,
@@ -216,7 +220,7 @@ func TestRuntimeError(t *testing.T) {
 			},
 			transform: func(c *run.Cmd) {
 				c.SysProcAttr.Chroot = filepath.Dir(c.Path)
-				c.Path = "/" + filepath.Base(c.Path)
+				c.Path = "/test"
 			},
 		},
 	}
