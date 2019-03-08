@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-type errPathInvalid struct{
+type errPathInvalid struct {
 	path string
 }
 

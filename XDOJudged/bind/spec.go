@@ -6,7 +6,7 @@ import (
 )
 
 type BindMount struct {
-	OldDir, NewDir string
+	OldDir, NewDir        string
 	NoRecursive, ReadOnly bool
 }
 
@@ -28,9 +28,9 @@ func Parse(s string) (*BindMount, error) {
 		return nil, fmt.Errorf("can not parse %s", s)
 	}
 	return &BindMount{
-		OldDir: path[0],
-		NewDir: path[1],
-		ReadOnly: path[2] == "ro",
+		OldDir:      path[0],
+		NewDir:      path[1],
+		ReadOnly:    path[2] == "ro",
 		NoRecursive: path[3] != "rbind",
-	}, nil;
+	}, nil
 }
