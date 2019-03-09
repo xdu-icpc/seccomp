@@ -27,8 +27,8 @@ func (cg *Cgroup) getPath(c Controller, key string) (string,
 	if cg.fsid[c] == 0 {
 		return "", ErrNoController
 	}
-	key = string(c) + "." + key
-	return cg.fs[cg.fsid[c]-1] + "/" + string(c) + "." + key, nil
+	key = c.String() + "." + key
+	return cg.fs[cg.fsid[c]-1] + "/" + key, nil
 }
 
 // Open a Cgroup file for read.
