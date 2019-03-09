@@ -12,12 +12,11 @@ const (
 	ReasonUnknown RuntimeErrorReason = iota
 	ReasonWallTimeLimit
 	ReasonCPUTimeLimit
-	ReasonMemoryLimit
 )
 
 // A RuntimeError represents an error occured during external program
 // (compiler, object code of submitted code, checker and etc.)  Note that
-// the concept is wider than an "RE" in ACM/ICPC like contests.  Actually
+// the concept is wider than an "RE" in ICPC-like contests.  Actually
 // it also covers "MLE", "TLE", and "OLE".
 type RuntimeError struct {
 	// If positive, contains the exit code of the program.
@@ -47,8 +46,6 @@ func (re *RuntimeError) String() string {
 		return "time limit exceeded (CPU)"
 	case ReasonWallTimeLimit:
 		return "time limit exceeded (wallclock)"
-	case ReasonMemoryLimit:
-		return "memory limit exceeded"
 	}
 	return "wat the fuck?"
 }
