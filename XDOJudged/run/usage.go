@@ -7,7 +7,10 @@ import (
 
 // A Usage contains runtime usage info of a process.
 type Usage struct {
-	CPUTime      time.Duration
+	// CPU time consumed by the process.
+	CPUTime time.Duration
+	// Memory consumed by the process.  A zero value means we failed
+	// to get it.
 	MemoryInByte int64
 }
 
