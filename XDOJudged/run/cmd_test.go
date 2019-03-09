@@ -104,14 +104,14 @@ func TestStart(t *testing.T) {
 	t.Logf("re = %v", re)
 }
 
-func TestRuntimeError(t *testing.T) {
-	type transform func(*run.Cmd) interface{}
+func TestRun(t *testing.T) {
+	type setup func(*run.Cmd) interface{}
 	type test struct {
-		name      string
-		attr      *run.Attr
-		sysattr   *syscall.SysProcAttr
-		re        *run.RuntimeError
-		transform transform
+		name    string
+		attr    *run.Attr
+		sysattr *syscall.SysProcAttr
+		re      *run.RuntimeError
+		setup   setup
 	}
 
 	tl := time.Millisecond * 200
@@ -230,7 +230,7 @@ func TestRuntimeError(t *testing.T) {
 				UidMappings: idMap,
 				GidMappings: idMap,
 			},
-			transform: func(c *run.Cmd) interface{} {
+			setup: func(c *run.Cmd) interface{} {
 				c.SysProcAttr.Chroot = filepath.Dir(c.Path)
 				c.Path = "/test"
 				return nil
@@ -242,7 +242,7 @@ func TestRuntimeError(t *testing.T) {
 				CPUTimeLimit:  &tl,
 				WallTimeLimit: &walltl,
 			},
-			transform: func(i *run.Cmd) interface{} {
+			setup: func(i *run.Cmd) interface{} {
 				if os.Getenv("GO_XDOJ_RUN_TEST_CGROUP") != "1" {
 					return "skip cgroup test by default"
 				}
@@ -292,8 +292,8 @@ func TestRuntimeError(t *testing.T) {
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
 			cmd.Env = []string{"GO_XDOJ_RUN_TEST_PROC=1"}
-			if i.transform != nil {
-				result := i.transform(cmd)
+			if i.setup != nil {
+				result := i.setup(cmd)
 				if result != nil {
 					t.Skip(result)
 				}
