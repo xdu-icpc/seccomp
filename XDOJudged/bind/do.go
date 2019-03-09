@@ -45,7 +45,7 @@ func (b *BindMount) DoMountWithChroot(chroot string) error {
 	if b.ReadOnly {
 		// modify the per-mount-point flags to be read-only
 		err := unix.Mount(b.OldDir, mountPoint, "",
-			unix.MS_BIND|unix.MS_REMOUNT|unix.MS_RDONLY, "")
+			uintptr(flag)|unix.MS_RDONLY|unix.MS_REMOUNT, "")
 		if err != nil {
 			return fmt.Errorf("can not remount the bind mount %s "+
 				"to be read only: %v", b.NewDir, err)
