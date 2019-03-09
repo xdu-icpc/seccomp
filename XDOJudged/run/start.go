@@ -7,7 +7,6 @@ import (
 	"golang.org/x/sys/unix"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/posixtime"
@@ -17,25 +16,6 @@ var ErrBindWithoutChroot = errors.New("bind mount only makes sense with " +
 	"chroot")
 var ErrBindUnsafe = errors.New("bind mount is too dangerous with out new " +
 	"mount namespace")
-
-type errPathInvalid struct {
-	path string
-}
-
-func (e errPathInvalid) Error() string {
-	return fmt.Sprintf("path %s is invalid for bind", e.path)
-}
-
-func newErrPathInvalid(path string) errPathInvalid {
-	return errPathInvalid{path: path}
-}
-
-func sanitizePathForBind(path string) (string, error) {
-	if filepath.IsAbs(path) {
-		return filepath.Clean(path), nil
-	}
-	return "", newErrPathInvalid(path)
-}
 
 var zeroAttr Attr
 
