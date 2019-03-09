@@ -37,9 +37,15 @@ func (c *Cmd) wait() (*Usage, *RuntimeError, error) {
 	// TODO: NeedToInvestigate: should we use the return value?
 	_ = c.Cmd.Wait()
 
+	rusage, ok := c.ProcessState.SysUsage().(*syscall.Rusage)
+	memusage := int64(0)
+	if ok {
+		memusage = rusage.Maxrss * 1024
+	}
+
 	usage := Usage{
 		CPUTime:      c.ProcessState.SystemTime() + c.ProcessState.UserTime(),
-		MemoryInByte: 0, // FIXME: not implemented yet.
+		MemoryInByte: memusage,
 	}
 
 	status := c.ProcessState.Sys().(syscall.WaitStatus)
