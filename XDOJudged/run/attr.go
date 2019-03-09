@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/cgroup"
 )
 
 type ResourceLimit struct {
@@ -29,5 +30,6 @@ type Attr struct {
 	// capabilities.
 	KeepCap bool
 
-	// TODO: Fields for cgroups...
+	// The Cgroup the new process should join.
+	Cgroup *cgroup.Cgroup
 }

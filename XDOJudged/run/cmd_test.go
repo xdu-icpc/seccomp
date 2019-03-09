@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/cgroup"
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/run"
 )
 
@@ -50,7 +51,7 @@ func TestHelperProcess(*testing.T) {
 		fmt.Println("Hello, world.")
 	case "TestILE":
 		select {}
-	case "TestTLE":
+	case "TestTLE", "TestCgroup":
 		for {
 		}
 	case "TestCapability", "TestNoCapability":
@@ -104,7 +105,7 @@ func TestStart(t *testing.T) {
 }
 
 func TestRuntimeError(t *testing.T) {
-	type transform func(*run.Cmd)
+	type transform func(*run.Cmd) interface{}
 	type test struct {
 		name      string
 		attr      *run.Attr
@@ -114,6 +115,7 @@ func TestRuntimeError(t *testing.T) {
 	}
 
 	tl := time.Millisecond * 200
+	walltl := time.Millisecond * 400
 	idMap := []syscall.SysProcIDMap{
 		{ContainerID: 0, HostID: os.Getuid(), Size: 1},
 	}
@@ -133,7 +135,7 @@ func TestRuntimeError(t *testing.T) {
 		{
 			name: "TestILE",
 			attr: &run.Attr{
-				WallTimeLimit: &tl,
+				WallTimeLimit: &walltl,
 			},
 			re: &run.RuntimeError{
 				Reason: run.ReasonWallTimeLimit,
@@ -228,9 +230,55 @@ func TestRuntimeError(t *testing.T) {
 				UidMappings: idMap,
 				GidMappings: idMap,
 			},
-			transform: func(c *run.Cmd) {
+			transform: func(c *run.Cmd) interface{} {
 				c.SysProcAttr.Chroot = filepath.Dir(c.Path)
 				c.Path = "/test"
+				return nil
+			},
+		},
+		{
+			name: "TestCgroup",
+			attr: &run.Attr{
+				CPUTimeLimit:  &tl,
+				WallTimeLimit: &walltl,
+			},
+			transform: func(i *run.Cmd) interface{} {
+				if os.Getenv("GO_XDOJ_RUN_TEST_CGROUP") != "1" {
+					return "skip cgroup test by default"
+				}
+				cg, err := cgroup.Get(os.Getpid())
+				if err != nil {
+					return fmt.Errorf("can not get cgroup for test: %v",
+						err)
+				}
+				err = cg.SetController([]cgroup.Controller{cgroup.CPU})
+				if err != nil {
+					return fmt.Errorf("SetController: %v", err)
+				}
+				_, err = cg.ToInnerNode()
+				if err != nil {
+					return fmt.Errorf("ToInnerNode: %v", err)
+				}
+				subcg, err := cg.Fork("test")
+				if err != nil {
+					return fmt.Errorf("cgroup Fork: %v", err)
+				}
+				// Throttle CPU to 10% so it would ILE
+				i.Attr.Cgroup = subcg
+				weightFile, err := subcg.OpenForWrite(cgroup.CPU, "max")
+				if err != nil {
+					return fmt.Errorf("OpenForWrite: %v", err)
+				}
+				defer weightFile.Close()
+				_, err = weightFile.WriteString("10000 100000")
+				if err != nil {
+					return fmt.Errorf("Write: %v", err)
+				}
+				return nil
+			},
+			re: &run.RuntimeError{
+				Reason: run.ReasonWallTimeLimit,
+				Code:   -int(unix.SIGKILL),
 			},
 		},
 	}
@@ -245,7 +293,10 @@ func TestRuntimeError(t *testing.T) {
 			cmd.Stdout = os.Stdout
 			cmd.Env = []string{"GO_XDOJ_RUN_TEST_PROC=1"}
 			if i.transform != nil {
-				i.transform(cmd)
+				result := i.transform(cmd)
+				if result != nil {
+					t.Skip(result)
+				}
 			}
 			usage, re, err := cmd.Run()
 			if err != nil {

@@ -142,6 +142,14 @@ func (c *Cmd) start() (err error) {
 		}
 	}
 
+	// Throw the child into the Cgroup
+	if attr.Cgroup != nil {
+		err := attr.Cgroup.Attach(c.Process.Pid)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Grant the child to continue
 	out.Close()
 
