@@ -81,16 +81,7 @@ func init() {
 			bailOut(out, "can not parse arguments", err)
 		}
 
-		runtime.LockOSThread()
-		defer runtime.UnlockOSThread()
-
-		if useSeccomp {
-			err = seccomp.SeccompFilter(0, noForkFilter)
-			if err != nil {
-				bailOut(out, "can not set seccomp filter", err)
-			}
-		}
-
+		// Bind mount.
 		for _, item := range bindArg.Args() {
 			b, err := bind.Parse(item)
 			if err != nil {
@@ -106,12 +97,17 @@ func init() {
 			}
 		}
 
+		// Chroot.
 		if chroot != "" {
 			err := unix.Chroot(chroot)
 			if err != nil {
 				bailOut(out, "can not chroot", err)
 			}
 		}
+
+		// Capabilites and seccomp filters are per-thread attribute.
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
 
 		capset, err := capability.NewPid2(0)
 
@@ -123,6 +119,13 @@ func init() {
 		err = capset.Apply(capability.BOUNDING)
 		if err != nil {
 			bailOut(out, "can not clear capability bounding set", err)
+		}
+
+		if useSeccomp {
+			err = seccomp.SeccompFilter(0, noForkFilter)
+			if err != nil {
+				bailOut(out, "can not set seccomp filter", err)
+			}
 		}
 
 		out.Write(syncFlag[:])
