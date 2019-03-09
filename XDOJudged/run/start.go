@@ -61,6 +61,11 @@ func (c *Cmd) start() (err error) {
 		args = append(args, "-chroot="+chroot)
 	}
 
+	// Maybe we want to keep the capabilites
+	if attr.KeepCap {
+		args = append(args, "-dropcap=false")
+	}
+
 	if len(attr.BindMount) != 0 {
 		if chroot == "" {
 			return ErrBindWithoutChroot

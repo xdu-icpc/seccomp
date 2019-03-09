@@ -25,5 +25,9 @@ type Attr struct {
 
 	BindMount []bind.BindMount
 
+	// If this is true, we won't drop (real or namespace) root's
+	// capabilities.
+	KeepCap bool
+
 	// TODO: Fields for cgroups...
 }

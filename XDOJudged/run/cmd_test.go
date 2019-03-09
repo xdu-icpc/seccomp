@@ -53,7 +53,7 @@ func TestHelperProcess(*testing.T) {
 	case "TestTLE":
 		for {
 		}
-	case "TestNoCapability":
+	case "TestCapability", "TestNoCapability":
 		if os.Getuid() != 0 {
 			log.Fatalf("UID is not 0")
 		}
@@ -138,6 +138,16 @@ func TestRuntimeError(t *testing.T) {
 			re: &run.RuntimeError{
 				Reason: run.ReasonWallTimeLimit,
 				Code:   -int(unix.SIGKILL),
+			},
+		},
+		{
+			name: "TestCapability",
+			attr: &run.Attr{KeepCap: true},
+			sysattr: &syscall.SysProcAttr{
+				Chroot:      "/",
+				Cloneflags:  syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER,
+				UidMappings: idMap,
+				GidMappings: idMap,
 			},
 		},
 		{

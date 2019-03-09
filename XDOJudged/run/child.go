@@ -76,6 +76,9 @@ func init() {
 		bindArg := multiflag.StringSet(fs, "bind", "none",
 			"bind mount a file or directory into chroot", "")
 
+		dropCap := true
+		fs.BoolVar(&dropCap, "dropcap", true, "drop capabilites")
+
 		err = fs.Parse(os.Args[1:])
 		if err != nil {
 			bailOut(out, "can not parse arguments", err)
@@ -115,10 +118,12 @@ func init() {
 			bailOut(out, "can not init capability set", err)
 		}
 
-		capset.Clear(capability.BOUNDING)
-		err = capset.Apply(capability.BOUNDING)
-		if err != nil {
-			bailOut(out, "can not clear capability bounding set", err)
+		if dropCap {
+			capset.Clear(capability.BOUNDING)
+			err = capset.Apply(capability.BOUNDING)
+			if err != nil {
+				bailOut(out, "can not clear capability bounding set", err)
+			}
 		}
 
 		if useSeccomp {
