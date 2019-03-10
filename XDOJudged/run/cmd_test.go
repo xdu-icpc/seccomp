@@ -151,7 +151,7 @@ func TestRun(t *testing.T) {
 		{name: "TestFork"},
 		{
 			name:   "TestNoFork",
-			attr: &run.Attr{Seccomp: testaux.NoForkFilter},
+			attr:   &run.Attr{Seccomp: testaux.NoForkFilter},
 			expect: syscall.SIGSYS,
 		},
 		{

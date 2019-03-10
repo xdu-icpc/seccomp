@@ -60,7 +60,7 @@ func (c *Cmd) start() (err error) {
 	}
 
 	if attr.Seccomp != "" {
-		args = append(args, "-seccomp=" + attr.Seccomp)
+		args = append(args, "-seccomp="+attr.Seccomp)
 	}
 
 	if len(attr.BindMount) != 0 {
