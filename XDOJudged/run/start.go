@@ -9,8 +9,6 @@ import (
 	"os"
 )
 
-var ErrBindWithoutChroot = errors.New("bind mount only makes sense with " +
-	"chroot")
 var ErrBindUnsafe = errors.New("bind mount is too dangerous with out new " +
 	"mount namespace")
 
@@ -64,9 +62,6 @@ func (c *Cmd) start() (err error) {
 	}
 
 	if len(attr.BindMount) != 0 {
-		if chroot == "" {
-			return ErrBindWithoutChroot
-		}
 		if c.SysProcAttr.Cloneflags&unix.CLONE_NEWNS != unix.CLONE_NEWNS {
 			return ErrBindUnsafe
 		}
