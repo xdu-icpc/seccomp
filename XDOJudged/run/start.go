@@ -7,9 +7,6 @@ import (
 	"golang.org/x/sys/unix"
 	"io"
 	"os"
-	"time"
-
-	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/posixtime"
 )
 
 var ErrBindWithoutChroot = errors.New("bind mount only makes sense with " +
@@ -45,10 +42,6 @@ func (c *Cmd) start() (err error) {
 	defer out1.Close()
 
 	args := []string{ChildName}
-	if attr.CPUTimeLimit == nil {
-		// Do not use seccomp filter.
-		args = append(args, "-seccomp=false")
-	}
 
 	// Delegate chroot to our helper.
 	// If we chroot too early, we can't find this executable in chroot and
@@ -109,44 +102,6 @@ func (c *Cmd) start() (err error) {
 	for i, b := range syncFlag {
 		if buf[i] != b {
 			return fmt.Errorf("child: %s", buf)
-		}
-	}
-
-	// Setup the time limits
-	clock, err := posixtime.GetCPUClockID(c.Process.Pid)
-	if err != nil {
-		return err
-	}
-
-	if attr.CPUTimeLimit != nil {
-		c.cpuTimer, err = clock.AfterFunc(*c.Attr.CPUTimeLimit,
-			func(ev posixtime.TimerEvent) {
-				c.kill()
-			})
-		if err != nil {
-			return err
-		}
-	}
-
-	if attr.WallTimeLimit != nil {
-		c.wallTimer = time.AfterFunc(*c.Attr.WallTimeLimit, func() {
-			c.kill()
-		})
-	}
-
-	// Set up resource limits
-	for _, rlim := range attr.ResourceLimit {
-		err := prlimit(c.Process.Pid, rlim.Resource, &rlim.Rlimit, nil)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Throw the child into the Cgroup
-	if attr.Cgroup != nil {
-		err := attr.Cgroup.Attach(c.Process.Pid)
-		if err != nil {
-			return err
 		}
 	}
 

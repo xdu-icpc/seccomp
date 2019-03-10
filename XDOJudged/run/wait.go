@@ -22,15 +22,6 @@ func (c *Cmd) wait() (*Usage, *RuntimeError, error) {
 		c.kill()
 	}
 
-	wallOk := true
-	if c.wallTimer != nil {
-		wallOk = c.wallTimer.Stop()
-	}
-	cpuOk := true
-	if c.cpuTimer != nil {
-		cpuOk = c.cpuTimer.Stop()
-	}
-
 	// This is *critical* - from now we should *not* use any resources
 	// (clock, timer, etc) bound to the PID any more.
 	//
@@ -49,33 +40,15 @@ func (c *Cmd) wait() (*Usage, *RuntimeError, error) {
 	}
 
 	status := c.ProcessState.Sys().(syscall.WaitStatus)
-	var re RuntimeError
-	if status.Exited() {
-		re.Code = status.ExitStatus()
-	} else if status.Signaled() {
-		re.Code = -int(status.Signal())
-	} else {
-		// TODO: what should we do?
-	}
+	re := &RuntimeError{WaitStatus: status}
 
 	if sigstop {
-		re.Code = -int(syscall.SIGSTOP)
+		// TODO
 	}
 
-	if !cpuOk {
-		re.Reason = ReasonCPUTimeLimit
-		return &usage, &re, nil
-	}
-	if !wallOk {
-		re.Reason = ReasonWallTimeLimit
-		return &usage, &re, nil
-	}
-
-	// TODO: Check for memory limit
-
-	if re.Code == 0 {
+	if re.Exited() && re.ExitStatus() == 0 {
 		// No reason to believe there is a runtime error
 		return &usage, nil, nil
 	}
-	return &usage, &re, nil
+	return &usage, re, nil
 }

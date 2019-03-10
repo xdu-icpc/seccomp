@@ -8,10 +8,8 @@ import (
 	"path/filepath"
 	"syscall"
 	"testing"
-	"time"
 
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
-	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/cgroup"
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/run"
 )
 
@@ -28,15 +26,24 @@ func init() {
 	}
 }
 
-func compareRE(expect *run.RuntimeError, get *run.RuntimeError) error {
-	if expect == nil && get == nil {
-		return nil
+func compareRE(expect interface{}, get *run.RuntimeError) error {
+	switch expect.(type) {
+	case nil:
+		if get == nil {
+			return nil
+		}
+	case syscall.Signal:
+		if get != nil && get.Signaled() && get.Signal() == expect {
+			return nil
+		}
+	case int:
+		if get.Exited() && get.ExitStatus() == expect {
+			return nil
+		}
+	default:
+		return fmt.Errorf("WTF is %v?", expect)
 	}
-	if expect != nil && get != nil && *expect == *get {
-		return nil
-	}
-	return fmt.Errorf("runtime error result mismatch: expect %v, get %v",
-		expect, get)
+	return fmt.Errorf("expected %v, get %v", expect, get)
 }
 
 func TestHelperProcess(*testing.T) {
@@ -110,38 +117,16 @@ func TestRun(t *testing.T) {
 		name    string
 		attr    *run.Attr
 		sysattr *syscall.SysProcAttr
-		re      *run.RuntimeError
+		expect  interface{}
 		setup   setup
 	}
 
-	tl := time.Millisecond * 200
-	walltl := time.Millisecond * 400
 	idMap := []syscall.SysProcIDMap{
 		{ContainerID: 0, HostID: os.Getuid(), Size: 1},
 	}
 
 	tests := []test{
 		{name: "TestHelloWorld"},
-		{
-			name: "TestTLE",
-			attr: &run.Attr{
-				CPUTimeLimit: &tl,
-			},
-			re: &run.RuntimeError{
-				Reason: run.ReasonCPUTimeLimit,
-				Code:   -int(unix.SIGKILL),
-			},
-		},
-		{
-			name: "TestILE",
-			attr: &run.Attr{
-				WallTimeLimit: &walltl,
-			},
-			re: &run.RuntimeError{
-				Reason: run.ReasonWallTimeLimit,
-				Code:   -int(unix.SIGKILL),
-			},
-		},
 		{
 			name: "TestCapability",
 			attr: &run.Attr{KeepCap: true},
@@ -160,49 +145,17 @@ func TestRun(t *testing.T) {
 				UidMappings: idMap,
 				GidMappings: idMap,
 			},
-			re: &run.RuntimeError{
-				Reason: run.ReasonUnknown,
-				Code:   125,
-			},
+			expect: 125,
 		},
 		{name: "TestFork"},
 		{
-			name: "TestNoFork",
-			attr: &run.Attr{
-				CPUTimeLimit: &tl,
-				ResourceLimit: []run.ResourceLimit{
-					{
-						Resource: unix.RLIMIT_CORE,
-						Rlimit:   unix.Rlimit{Cur: 0, Max: 0},
-					},
-				},
-			},
-			re: &run.RuntimeError{
-				Reason: run.ReasonUnknown,
-				Code:   -int(unix.SIGSYS),
-			},
-		},
-		{
-			name: "TestRlimit",
-			attr: &run.Attr{
-				ResourceLimit: []run.ResourceLimit{
-					{
-						Resource: unix.RLIMIT_STACK,
-						Rlimit: unix.Rlimit{
-							Cur: unix.RLIM_INFINITY,
-							Max: unix.RLIM_INFINITY,
-						},
-					},
-				},
-			},
+			name:   "TestNoFork",
+			expect: syscall.SIGSYS,
 		},
 		{
 			name:    "TestSigstop",
 			sysattr: &syscall.SysProcAttr{Setpgid: true},
-			re: &run.RuntimeError{
-				Reason: run.ReasonUnknown,
-				Code:   -int(unix.SIGSTOP),
-			},
+			expect:  syscall.SIGSTOP,
 		},
 		{
 			// Still fragile.  Will fail on systems w/o /lib64, etc.
@@ -236,51 +189,6 @@ func TestRun(t *testing.T) {
 				return nil
 			},
 		},
-		{
-			name: "TestCgroup",
-			attr: &run.Attr{
-				CPUTimeLimit:  &tl,
-				WallTimeLimit: &walltl,
-			},
-			setup: func(i *run.Cmd) interface{} {
-				if os.Getenv("GO_XDOJ_RUN_TEST_CGROUP") != "1" {
-					return "skip cgroup test by default"
-				}
-				cg, err := cgroup.Get(os.Getpid())
-				if err != nil {
-					return fmt.Errorf("can not get cgroup for test: %v",
-						err)
-				}
-				err = cg.SetController([]cgroup.Controller{cgroup.CPU})
-				if err != nil {
-					return fmt.Errorf("SetController: %v", err)
-				}
-				_, err = cg.ToInnerNode()
-				if err != nil {
-					return fmt.Errorf("ToInnerNode: %v", err)
-				}
-				subcg, err := cg.Fork("test")
-				if err != nil {
-					return fmt.Errorf("cgroup Fork: %v", err)
-				}
-				// Throttle CPU to 10% so it would ILE
-				i.Attr.Cgroup = subcg
-				weightFile, err := subcg.OpenForWrite(cgroup.CPU, "max")
-				if err != nil {
-					return fmt.Errorf("OpenForWrite: %v", err)
-				}
-				defer weightFile.Close()
-				_, err = weightFile.WriteString("10000 100000")
-				if err != nil {
-					return fmt.Errorf("Write: %v", err)
-				}
-				return nil
-			},
-			re: &run.RuntimeError{
-				Reason: run.ReasonWallTimeLimit,
-				Code:   -int(unix.SIGKILL),
-			},
-		},
 	}
 
 	for _, i := range tests {
@@ -304,7 +212,7 @@ func TestRun(t *testing.T) {
 			}
 			t.Logf("re = %v", re)
 			t.Logf("usage = %v", usage)
-			err = compareRE(i.re, re)
+			err = compareRE(i.expect, re)
 			if err != nil {
 				t.Fatal(err)
 			}

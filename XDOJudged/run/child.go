@@ -11,7 +11,7 @@ import (
 	"github.com/gyepisam/multiflag"
 	"github.com/syndtr/gocapability/capability"
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
-	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
+	_ "linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
 )
 
 // This command line (os.Args[0]) is internal used by the package.
@@ -67,8 +67,9 @@ func init() {
 		// Parse argument list.
 		fs := flag.NewFlagSet(ChildName, flag.ContinueOnError)
 
-		useSeccomp := true
-		fs.BoolVar(&useSeccomp, "seccomp", true, "enable seccomp filter")
+		useSeccomp := ""
+		fs.StringVar(&useSeccomp, "seccomp", "",
+			"use seccomp filter from file")
 
 		chroot := ""
 		fs.StringVar(&chroot, "chroot", "", "chroot into the directory")
@@ -126,12 +127,12 @@ func init() {
 			}
 		}
 
-		if useSeccomp {
+		/*if useSeccomp {
 			err = seccomp.SeccompFilter(0, noForkFilter)
 			if err != nil {
 				bailOut(out, "can not set seccomp filter", err)
 			}
-		}
+		}*/
 
 		out.Write(syncFlag[:])
 		// Wait for the parent's permission for departure.
