@@ -43,7 +43,7 @@ func (c *Cmd) wait() (*Usage, *RuntimeError, error) {
 	re := &RuntimeError{WaitStatus: status}
 
 	if sigstop {
-		// TODO
+		re.WaitStatus = syscall.WaitStatus(syscall.SIGSTOP)
 	}
 
 	if re.Exited() && re.ExitStatus() == 0 {
