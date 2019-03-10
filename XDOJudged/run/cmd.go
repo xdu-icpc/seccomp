@@ -41,6 +41,11 @@ func (c *Cmd) Wait() (*Usage, *RuntimeError, error) {
 	return c.wait()
 }
 
+// Kill calls c.Process.Kill().
+func (c *Cmd) Kill() error {
+	return c.kill()
+}
+
 // Command is a replica of (os/exec).Command.
 func Command(name string, arg ...string) *Cmd {
 	return &Cmd{Cmd: exec.Command(name, arg...)}
