@@ -112,6 +112,21 @@ func TestStart(t *testing.T) {
 	t.Logf("re = %v", re)
 }
 
+func TestSetupFail(t *testing.T) {
+	cmd := run.Command(os.Args[0], "-test.run=TestHelperProcess", "TestTLE")
+	cmd.Env = []string{"GO_XDOJ_RUN_TEST_PROC=1"}
+	cmd.Attr = &run.Attr{
+		Setup: func(p *os.Process) error {
+			return fmt.Errorf("test error")
+		},
+	}
+	err := cmd.Start()
+	if err == nil {
+		t.Fatal("Setup should fail")
+	}
+	t.Log(err)
+}
+
 func TestRun(t *testing.T) {
 	type setup func(*run.Cmd) interface{}
 	type test struct {

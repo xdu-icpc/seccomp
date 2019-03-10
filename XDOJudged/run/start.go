@@ -104,6 +104,13 @@ func (c *Cmd) start() (err error) {
 		}
 	}
 
+	if attr.Setup != nil {
+		err = attr.Setup(c.Process)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Grant the child to continue
 	out.Close()
 

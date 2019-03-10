@@ -1,8 +1,7 @@
 package run
 
 import (
-	"golang.org/x/sys/unix"
-
+	"os"
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
 )
 
@@ -17,6 +16,10 @@ type Attr struct {
 	// set, we'll refuse to modify current namespace and return an error.
 	BindMount []bind.BindMount
 
-	// Seccomp filter to use (in JSON encoded []bpf.Instruction)
+	// Seccomp filter to use (in JSON encoded []bpf.Instruction).
 	Seccomp string
+
+	// This function will be run before the child Process really Exec the
+	// command.
+	Setup func(*os.Process) error
 }
