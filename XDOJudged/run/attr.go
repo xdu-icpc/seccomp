@@ -21,4 +21,7 @@ type Attr struct {
 	// Bind mount filesystems.  If it is not empty but CLONE_NEWNS is not
 	// set, we'll refuse to modify current namespace and return an error.
 	BindMount []bind.BindMount
+
+	// Seccomp filter to use (in JSON encoded []bpf.Instruction)
+	Seccomp string
 }

@@ -1,8 +1,10 @@
 package run
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"golang.org/x/net/bpf"
 	"golang.org/x/sys/unix"
 	"io"
 	"os"
@@ -11,7 +13,7 @@ import (
 	"github.com/gyepisam/multiflag"
 	"github.com/syndtr/gocapability/capability"
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
-	_ "linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
 )
 
 // This command line (os.Args[0]) is internal used by the package.
@@ -67,9 +69,9 @@ func init() {
 		// Parse argument list.
 		fs := flag.NewFlagSet(ChildName, flag.ContinueOnError)
 
-		useSeccomp := ""
-		fs.StringVar(&useSeccomp, "seccomp", "",
-			"use seccomp filter from file")
+		seccompJson := ""
+		fs.StringVar(&seccompJson, "seccomp", "",
+			"seccomp filter in JSON encoded []bpf.RawInstruction")
 
 		chroot := ""
 		fs.StringVar(&chroot, "chroot", "", "chroot into the directory")
@@ -127,12 +129,18 @@ func init() {
 			}
 		}
 
-		/*if useSeccomp {
-			err = seccomp.SeccompFilter(0, noForkFilter)
+		if seccompJson != "" {
+			filter := []bpf.RawInstruction{}
+			err := json.Unmarshal([]byte(seccompJson), &filter)
+			if err != nil {
+				bailOut(out, "can not unmarshal seccomp filter from JSON",
+					err)
+			}
+			err = seccomp.SeccompFilter(0, filter)
 			if err != nil {
 				bailOut(out, "can not set seccomp filter", err)
 			}
-		}*/
+		}
 
 		out.Write(syncFlag[:])
 		// Wait for the parent's permission for departure.

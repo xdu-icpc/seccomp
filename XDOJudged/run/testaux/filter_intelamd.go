@@ -18,7 +18,7 @@
 
 // +build amd64 386
 
-package run
+package testaux
 
 import (
 	. "golang.org/x/net/bpf"

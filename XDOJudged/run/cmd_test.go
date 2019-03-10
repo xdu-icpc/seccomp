@@ -11,6 +11,7 @@ import (
 
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/bind"
 	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/run"
+	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/run/testaux"
 )
 
 func init() {
@@ -150,6 +151,7 @@ func TestRun(t *testing.T) {
 		{name: "TestFork"},
 		{
 			name:   "TestNoFork",
+			attr: &run.Attr{Seccomp: testaux.NoForkFilter},
 			expect: syscall.SIGSYS,
 		},
 		{

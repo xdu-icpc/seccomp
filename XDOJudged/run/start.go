@@ -59,6 +59,10 @@ func (c *Cmd) start() (err error) {
 		args = append(args, "-dropcap=false")
 	}
 
+	if attr.Seccomp != "" {
+		args = append(args, "-seccomp=" + attr.Seccomp)
+	}
+
 	if len(attr.BindMount) != 0 {
 		if chroot == "" {
 			return ErrBindWithoutChroot
