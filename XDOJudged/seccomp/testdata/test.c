@@ -21,6 +21,12 @@ int main()
 		exit(127);
 	}
 
+	ret = pthread_join(thread, NULL);
+	if (ret) {
+		fprintf(stderr, "pthread_join: %s", strerror(ret));
+		exit(127);
+	}
+
 	pid = fork();
 	if (pid == -1) {
 		perror("fork");
