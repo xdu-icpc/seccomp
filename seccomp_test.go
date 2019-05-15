@@ -25,7 +25,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
+	"github.com/xdu-icpc/seccomp"
 )
 
 func TestSeccompFilter(t *testing.T) {

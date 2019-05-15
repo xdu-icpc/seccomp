@@ -24,7 +24,7 @@ import (
 	. "golang.org/x/net/bpf"
 	"golang.org/x/sys/unix"
 
-	. "linux.xidian.edu.cn/git/XDU_ACM_ICPC/XDOJ-next/XDOJudged/seccomp"
+	. "github.com/xdu-icpc/seccomp"
 )
 
 const x32SyscallBit = uint32(0x40000000)
