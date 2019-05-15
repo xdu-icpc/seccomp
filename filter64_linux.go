@@ -3,7 +3,7 @@
 
 // Author: Xi Ruoyao <xry111@mengyan1223.wang>
 
-// +build amd64 arm64 mips64 mips64le mipsle ppc64 ppc64le s390x
+// +build amd64 arm64 mips64 mips64le ppc64 ppc64le s390x
 
 package seccomp
 
