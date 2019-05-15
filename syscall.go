@@ -37,13 +37,11 @@ func SeccompFilter(flags uintptr, filter []bpf.RawInstruction) error {
 		return unix.EINVAL
 	}
 
-	sockProg := sockFprog{
-		Len:    uint16(len(filter)),
-		Filter: &filter[0],
-	}
-
 	_, _, errno := unix.RawSyscall(unix.SYS_SECCOMP, 1, flags,
-		uintptr(unsafe.Pointer(&sockProg)))
+		uintptr(unsafe.Pointer(&sockFprog{
+			Len:    uint16(len(filter)),
+			Filter: &filter[0],
+		})))
 	if errno != 0 {
 		return errno
 	}
