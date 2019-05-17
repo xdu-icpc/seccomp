@@ -9,8 +9,8 @@ package seccomp
 
 import "golang.org/x/net/bpf"
 
-type sockFprog struct {
+type SockFprog struct {
 	Len       uint16
-	Pad_cgo_0 [2]byte
+	pad_cgo_0 [2]byte
 	Filter    *bpf.RawInstruction
 }
